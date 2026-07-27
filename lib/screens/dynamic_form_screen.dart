@@ -1,0 +1,339 @@
+import 'package:flutter/material.dart';
+import '../data/catalogos.dart';
+import '../models/form_models.dart';
+import '../theme/app_theme.dart';
+import '../widgets/form_field_widgets.dart';
+import '../widgets/offline_badge.dart';
+
+class DynamicFormScreen extends StatefulWidget {
+  final FormSchema schema;
+  final Color colorAcento;
+
+  const DynamicFormScreen(
+      {super.key, required this.schema, required this.colorAcento});
+
+  @override
+  State<DynamicFormScreen> createState() => _DynamicFormScreenState();
+}
+
+class _DynamicFormScreenState extends State<DynamicFormScreen> {
+  int _seccionActual = 0;
+
+  // Respuestas: String? para dropdown/singleChoice, Set<String> para
+  // multiChoice/monthMultiSelect, Map<String,String> para matrixSingle.
+  final Map<String, dynamic> _respuestas = {};
+
+  // Texto libre de las opciones "Otros" / disparadores condicionales.
+  final Map<String, String> _otros = {};
+
+  // Controladores de texto para campos de texto/número/texto largo/otros.
+  final Map<String, TextEditingController> _controladores = {};
+
+  TextEditingController _controladorPara(String id) {
+    return _controladores.putIfAbsent(id, () {
+      final controller = TextEditingController();
+      controller.addListener(() => _respuestas[id] = controller.text);
+      return controller;
+    });
+  }
+
+  @override
+  void dispose() {
+    for (final c in _controladores.values) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  bool _campoVisible(FormFieldConfig campo) {
+    if (campo.dependeDe == null) return true;
+    final valorDelQueDepende = _respuestas[campo.dependeDe];
+    if (valorDelQueDepende == null) return false;
+    return campo.mostrarSiValores?.contains(valorDelQueDepende) ?? false;
+  }
+
+  bool _campoRespondido(FormFieldConfig campo) {
+    final valor = _respuestas[campo.id];
+    if (valor == null) return false;
+    if (valor is String) return valor.trim().isNotEmpty;
+    if (valor is Set) return valor.isNotEmpty;
+    if (valor is Map) return valor.isNotEmpty;
+    return true;
+  }
+
+  List<FormFieldConfig> _camposVisiblesDe(FormSectionConfig seccion) {
+    return seccion.campos.where(_campoVisible).toList();
+  }
+
+  bool _validarSeccionActual() {
+    final seccion = widget.schema.secciones[_seccionActual];
+    for (final campo in _camposVisiblesDe(seccion)) {
+      if (campo.requerido && !_campoRespondido(campo)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Falta responder: "${campo.pregunta}"')),
+        );
+        return false;
+      }
+    }
+    return true;
+  }
+
+  void _siguiente() {
+    if (!_validarSeccionActual()) return;
+    final esUltima = _seccionActual == widget.schema.secciones.length - 1;
+    if (esUltima) {
+      _mostrarConfirmacionGuardado();
+    } else {
+      setState(() => _seccionActual++);
+    }
+  }
+
+  void _anterior() {
+    if (_seccionActual == 0) {
+      Navigator.of(context).pop();
+    } else {
+      setState(() => _seccionActual--);
+    }
+  }
+
+  void _mostrarConfirmacionGuardado() {
+    final totalPreguntas = widget.schema.totalPreguntas;
+    final totalRespondidas = widget.schema.secciones
+        .expand((s) => s.campos)
+        .where(_campoRespondido)
+        .length;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Revisar antes de guardar'),
+        content: Text(
+          'Respondiste $totalRespondidas de $totalPreguntas preguntas.\n\n'
+          'Este diagnóstico se guardará únicamente en este teléfono. '
+          'No se envía a internet en este momento.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Seguir editando'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop(); // cierra el diálogo
+              Navigator.of(context).pop(); // regresa a Home
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Diagnóstico guardado en este dispositivo.'),
+                  backgroundColor: AppColors.exito,
+                ),
+              );
+            },
+            child: const Text('Guardar diagnóstico'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final consentimiento = _respuestas['consentimiento'];
+    if (consentimiento == 'No') {
+      return _PantallaConsentimientoRechazado(onRegresar: () {
+        setState(() => _respuestas['consentimiento'] = null);
+      });
+    }
+
+    final seccion = widget.schema.secciones[_seccionActual];
+    final campos = _camposVisiblesDe(seccion);
+    final progreso = (_seccionActual + 1) / widget.schema.secciones.length;
+    final esUltima = _seccionActual == widget.schema.secciones.length - 1;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.schema.titulo),
+        backgroundColor: widget.colorAcento,
+      ),
+      body: Column(
+        children: [
+          LinearProgressIndicator(
+              value: progreso, color: widget.colorAcento, minHeight: 4),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Sección ${_seccionActual + 1} de ${widget.schema.secciones.length} · ${seccion.titulo}',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              itemCount: campos.length,
+              itemBuilder: (context, index) => _construirCampo(campos[index]),
+            ),
+          ),
+          SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: _anterior,
+                      child: Text(_seccionActual == 0 ? 'Cancelar' : 'Atrás'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    flex: 2,
+                    child: ElevatedButton(
+                      onPressed: _siguiente,
+                      style: ElevatedButton.styleFrom(
+                          backgroundColor: widget.colorAcento),
+                      child: Text(esUltima ? 'Revisar y guardar' : 'Siguiente'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _construirCampo(FormFieldConfig campo) {
+    switch (campo.tipo) {
+      case FieldType.dropdown:
+        return PreguntaContainer(
+          campo: campo,
+          child: CampoDropdown(
+            opciones: campo.opciones,
+            valor: _respuestas[campo.id] as String?,
+            onChanged: (v) => setState(() => _respuestas[campo.id] = v),
+          ),
+        );
+
+      case FieldType.singleChoice:
+        return PreguntaContainer(
+          campo: campo,
+          child: CampoOpcionUnica(
+            opciones: campo.opciones,
+            valor: _respuestas[campo.id] as String?,
+            onChanged: (v) => setState(() => _respuestas[campo.id] = v),
+            permiteOtro: campo.permiteOtro,
+            otroLabel: campo.otroLabel,
+            otroTriggerValor: campo.otroTriggerValor,
+            otroValor: _otros[campo.id],
+            onOtroChanged: (texto) => _otros[campo.id] = texto,
+          ),
+        );
+
+      case FieldType.multiChoice:
+        return PreguntaContainer(
+          campo: campo,
+          child: CampoOpcionMultiple(
+            opciones: campo.opciones,
+            valores: (_respuestas[campo.id] as Set<String>?) ?? <String>{},
+            onChanged: (v) => setState(() => _respuestas[campo.id] = v),
+            permiteOtro: campo.permiteOtro,
+            otroLabel: campo.otroLabel,
+            otroValor: _otros[campo.id],
+            onOtroChanged: (texto) => _otros[campo.id] = texto,
+            maxSelecciones: campo.maxSelecciones,
+          ),
+        );
+
+      case FieldType.monthMultiSelect:
+        return PreguntaContainer(
+          campo: campo,
+          child: CampoMesesMultiple(
+            meses: mesesDelAno,
+            valores: (_respuestas[campo.id] as Set<String>?) ?? <String>{},
+            onChanged: (v) => setState(() => _respuestas[campo.id] = v),
+          ),
+        );
+
+      case FieldType.matrixSingle:
+        return PreguntaContainer(
+          campo: campo,
+          child: CampoMatrizLikert(
+            filas: campo.filas,
+            columnas: campo.columnas,
+            valores: (_respuestas[campo.id] as Map<String, String>?) ??
+                <String, String>{},
+            onChanged: (v) => setState(() => _respuestas[campo.id] = v),
+          ),
+        );
+
+      case FieldType.text:
+        final controller = _controladorPara(campo.id);
+        return PreguntaContainer(
+            campo: campo, child: CampoTexto(controller: controller));
+
+      case FieldType.number:
+        final controller = _controladorPara(campo.id);
+        return PreguntaContainer(
+          campo: campo,
+          child: CampoTexto(
+              controller: controller, tipoTeclado: TextInputType.number),
+        );
+
+      case FieldType.textArea:
+        final controller = _controladorPara(campo.id);
+        return PreguntaContainer(
+          campo: campo,
+          child: CampoTexto(controller: controller, maxLineas: 4),
+        );
+    }
+  }
+}
+
+class _PantallaConsentimientoRechazado extends StatelessWidget {
+  final VoidCallback onRegresar;
+  const _PantallaConsentimientoRechazado({required this.onRegresar});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Diagnóstico')),
+      body: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.info_outline,
+                size: 56, color: AppColors.textoSecundario),
+            const SizedBox(height: 16),
+            Text(
+              'Entendido, gracias por su tiempo.',
+              style: Theme.of(context).textTheme.headlineSmall,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'No se guardará ninguna respuesta de este diagnóstico. '
+              'Si cambia de opinión, puede volver a intentarlo cuando guste.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: AppColors.textoSecundario),
+            ),
+            const SizedBox(height: 24),
+            const OfflineBadge(),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: onRegresar,
+              child: const Text('Regresar y cambiar mi respuesta'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

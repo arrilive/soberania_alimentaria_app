@@ -1,0 +1,37 @@
+name: soberania_alimentaria_app
+description: >
+  Prototipo de app móvil para captura offline de los formularios de
+  diagnóstico de cadena de valor agroecológica (Proyecto SECIHTI 2026,
+  Redes de Producción Agroalimentaria Resilientes - UADY).
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # cupertino_icons: ^1.0.6
+  # ↑ Comentado a propósito: el código actual no usa ningún ícono Cupertino
+  # (solo Icons.* de Material), así que no hace falta todavía. Sirve además
+  # como diagnóstico: sin dependencias externas, "flutter pub get" no debería
+  # necesitar tocar pub.dev en absoluto. Descomenta cuando el acceso a
+  # internet esté resuelto y de verdad se necesite.
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  # ↑ Mismo motivo: es solo para el linter, no afecta que la app compile o
+  # corra. Se reactiva en cuanto pub.dev sea accesible.
+
+flutter:
+  uses-material-design: true
+
+# NOTA (fase 2, fuera del alcance de este mockup):
+# Cuando pasemos de "diseño" a "app funcional", aquí se agregará:
+#   drift + sqlite3_flutter_libs  -> almacenamiento local relacional
+#   path_provider                 -> ubicación del archivo .db en el dispositivo
+# No se agregan todavía siguiendo YAGNI: no hay caso de uso de persistencia
+# real en esta etapa de puro diseño de interfaz.

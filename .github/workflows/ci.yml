@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [dev, main]
+  push:
+    branches: [dev, main]
+
+jobs:
+  flutter-ci:
+    name: flutter-ci
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.8'
+          channel: 'stable'
+
+      - name: Instalar dependencias
+        run: flutter pub get
+
+      - name: Verificar formato (dart format)
+        run: dart format --output=none --set-exit-if-changed .
+
+      - name: Analizar (flutter analyze)
+        run: flutter analyze
+
+      - name: Correr tests
+        run: flutter test

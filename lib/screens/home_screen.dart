@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../data/form_schemas.dart';
 import '../theme/app_theme.dart';
-import '../widgets/offline_badge.dart';
 import 'dynamic_form_screen.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -23,13 +22,10 @@ class HomeScreen extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              'Proyecto SECIHTI · Redes de Producción Agroalimentaria Resilientes. '
-              'Esta encuesta es voluntaria y confidencial: los datos se usan '
-              'únicamente para el diagnóstico comunitario.',
+              'Proyecto SECIHTI 2026 · Esta encuesta es voluntaria y confidencial. '
+              'Los datos se usarán únicamente para el diagnóstico comunitario.',
               style: Theme.of(context).textTheme.bodyMedium,
             ),
-            const SizedBox(height: 16),
-            const OfflineBadge(),
             const SizedBox(height: 24),
             _TarjetaFormulario(
               titulo: formularioEjecutivo.titulo,
@@ -50,12 +46,12 @@ class HomeScreen extends StatelessWidget {
               titulo: formularioAmpliado.titulo,
               descripcion: formularioAmpliado.descripcionCorta,
               icono: Icons.fact_check_outlined,
-              color: AppColors.verdeTierra,
+              color: AppColors.guinda,
               onTap: () => Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (_) => const DynamicFormScreen(
                     schema: formularioAmpliado,
-                    colorAcento: AppColors.verdeTierra,
+                    colorAcento: AppColors.guinda,
                   ),
                 ),
               ),

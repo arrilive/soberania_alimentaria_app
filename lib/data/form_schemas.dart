@@ -59,7 +59,7 @@ const _qTelefono = FormFieldConfig(
   id: 'telefono',
   numero: '5',
   pregunta: '¿Tiene teléfono o WhatsApp para futuro contacto?',
-  tipo: FieldType.text,
+  tipo: FieldType.number,
   placeholder: 'Ej. 999 123 45 67',
 );
 

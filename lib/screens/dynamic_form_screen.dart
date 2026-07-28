@@ -3,7 +3,6 @@ import '../data/catalogos.dart';
 import '../models/form_models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/form_field_widgets.dart';
-import '../widgets/offline_badge.dart';
 
 class DynamicFormScreen extends StatefulWidget {
   final FormSchema schema;
@@ -183,6 +182,7 @@ class _DynamicFormScreenState extends State<DynamicFormScreen> {
           ),
           Expanded(
             child: ListView.builder(
+              key: ValueKey(_seccionActual),
               padding: const EdgeInsets.symmetric(horizontal: 16),
               itemCount: campos.length,
               itemBuilder: (context, index) => _construirCampo(campos[index]),
@@ -348,8 +348,6 @@ class _PantallaConsentimientoRechazado extends StatelessWidget {
               textAlign: TextAlign.center,
               style: TextStyle(color: AppColors.textoSecundario),
             ),
-            const SizedBox(height: 24),
-            const OfflineBadge(),
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: onRegresar,

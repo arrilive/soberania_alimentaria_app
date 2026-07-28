@@ -12,7 +12,7 @@ class SoberaniaAlimentariaApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Soberanía Alimentaria — Diagnóstico',
+      title: 'Soberanía alimentaria',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.tema,
       home: const HomeScreen(),

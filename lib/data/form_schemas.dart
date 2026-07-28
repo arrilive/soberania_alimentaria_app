@@ -52,6 +52,7 @@ const _qNombre = FormFieldConfig(
   numero: '4',
   pregunta: '¿Cuál es su nombre?',
   tipo: FieldType.text,
+  placeholder: 'Ej. María González Ek',
 );
 
 const _qTelefono = FormFieldConfig(
@@ -59,6 +60,7 @@ const _qTelefono = FormFieldConfig(
   numero: '5',
   pregunta: '¿Tiene teléfono o WhatsApp para futuro contacto?',
   tipo: FieldType.text,
+  placeholder: 'Ej. 999 123 45 67',
 );
 
 const _qInteresTaller = FormFieldConfig(
@@ -76,7 +78,7 @@ const _qProductoPrincipal = FormFieldConfig(
   numero: '7',
   pregunta:
       '¿Cuál es el producto o cultivo más importante en su actividad productiva?',
-  tipo: FieldType.singleChoice,
+  tipo: FieldType.multiChoice,
   opciones: [
     'Milpa (maíz, frijol, calabaza)',
     'Miel / apicultura',
@@ -104,7 +106,7 @@ const _qComoVende = FormFieldConfig(
   id: 'como_vende',
   numero: '9',
   pregunta: '¿Cómo vende o distribuye principalmente su producto?',
-  tipo: FieldType.singleChoice,
+  tipo: FieldType.multiChoice,
   opciones: [
     'Autoconsumo con algunos excedentes para venta',
     'Venta local: mercado, tianguis o en la comunidad',
@@ -181,6 +183,7 @@ const _qGastoTransporte = FormFieldConfig(
       '¿Cuánto gasta aproximadamente en transporte por cada viaje para vender '
       'o entregar su producto? (en pesos MXN)',
   tipo: FieldType.number,
+  placeholder: 'Ej. 150',
 );
 
 const _qFrecuenciaViajes = FormFieldConfig(
@@ -239,6 +242,7 @@ const _qOtroRiesgo = FormFieldConfig(
   pregunta:
       '¿Hay algún otro riesgo importante que enfrenta y que no aparece en la lista?',
   tipo: FieldType.textArea,
+  placeholder: 'Escriba con sus propias palabras, no hay respuesta incorrecta',
 );
 
 const _qRolCadenaValor = FormFieldConfig(
@@ -269,7 +273,7 @@ const _qDondeRegistra = FormFieldConfig(
   id: 'donde_registra',
   numero: '30',
   pregunta: '¿Dónde registra principalmente su información productiva?',
-  tipo: FieldType.singleChoice,
+  tipo: FieldType.multiChoice,
   opciones: [
     'Libreta o cuaderno',
     'Hoja de cálculo (Excel, Google Sheets)',
@@ -307,6 +311,8 @@ const _qApoyoRegistro = FormFieldConfig(
     'Conectividad a internet',
   ],
   permiteOtro: true,
+  otroLabel: 'Otras:',
+  otroOpcionTexto: 'Otras',
   ayuda: 'Seleccione todas las que apliquen',
 );
 
@@ -328,6 +334,8 @@ const _qProblemaUrgente = FormFieldConfig(
     'No tengo registros para saber cuál es el problema',
   ],
   permiteOtro: true,
+  otroLabel: 'Otras:',
+  otroOpcionTexto: 'Otras',
 );
 
 /// ---------------------------------------------------------------------
@@ -337,7 +345,7 @@ const _qProblemaUrgente = FormFieldConfig(
 const formularioEjecutivo = FormSchema(
   id: 'ejecutivo',
   titulo: 'Formulario Ejecutivo',
-  descripcionCorta: 'Versión corta del diagnóstico (~26 preguntas, 10-15 min)',
+  descripcionCorta: 'Versión corta del diagnóstico (36 preguntas)',
   secciones: [
     FormSectionConfig(
       titulo: 'Datos Generales e Identificación',
@@ -415,8 +423,7 @@ const formularioEjecutivo = FormSchema(
 const formularioAmpliado = FormSchema(
   id: 'ampliado',
   titulo: 'Formulario Ampliado',
-  descripcionCorta:
-      'Versión completa del diagnóstico (~39 preguntas, 25-30 min)',
+  descripcionCorta: 'Versión completa del diagnóstico (39 preguntas)',
   secciones: [
     FormSectionConfig(
       titulo: 'Datos Generales e Identificación',
@@ -468,6 +475,7 @@ const formularioAmpliado = FormSchema(
               'Describa brevemente una práctica agroecológica que le haya '
               'funcionado bien en su parcela o unidad productiva:',
           tipo: FieldType.textArea,
+          placeholder: 'Ej. Empecé a rotar cultivos y mejoró el suelo',
         ),
         _qAfirmacionesSoberania,
       ],
@@ -500,7 +508,7 @@ const formularioAmpliado = FormSchema(
           tipo: FieldType.singleChoice,
           opciones: ['No', 'Si'],
           otroTriggerValor: 'Si',
-          otroLabel: '¿Cuáles?',
+          otroLabel: 'Cuáles:',
         ),
         FormFieldConfig(
           id: 'cuando_le_pagan',
@@ -641,8 +649,8 @@ const formularioAmpliado = FormSchema(
             'Llevar registros y usar datos para decidir',
           ],
           permiteOtro: true,
-          maxSelecciones: 3,
-          ayuda: 'Seleccione hasta 3 opciones',
+          otroLabel: 'Otras:',
+          otroOpcionTexto: 'Otras',
         ),
         _qProblemaUrgente,
         FormFieldConfig(
@@ -659,6 +667,8 @@ const formularioAmpliado = FormSchema(
             'Híbrido: sesión presencial + seguimiento por WhatsApp',
           ],
           permiteOtro: true,
+          otroLabel: 'Otras:',
+          otroOpcionTexto: 'Otras',
         ),
         FormFieldConfig(
           id: 'tiempo_disponible_capacitacion',
@@ -679,7 +689,7 @@ const formularioAmpliado = FormSchema(
           numero: '38',
           pregunta:
               '¿Qué es lo que más le dificulta asistir o participar en una capacitación?',
-          tipo: FieldType.multiChoice,
+          tipo: FieldType.singleChoice,
           opciones: [
             'Falta de tiempo por trabajo en la parcela',
             'Costo o dificultad de transporte para llegar',
@@ -691,6 +701,8 @@ const formularioAmpliado = FormSchema(
             'Temor a compartir datos personales',
           ],
           permiteOtro: true,
+          otroLabel: 'Otras:',
+          otroOpcionTexto: 'Otras',
           ayuda: 'Seleccione todas las que apliquen',
         ),
         FormFieldConfig(
@@ -698,7 +710,7 @@ const formularioAmpliado = FormSchema(
           numero: '39',
           pregunta:
               '¿En qué actividades de la red comunitaria podría participar?',
-          tipo: FieldType.multiChoice,
+          tipo: FieldType.singleChoice,
           opciones: [
             'Registro de datos de mi producción',
             'Coordinación de acopio (recepción y calidad)',
@@ -708,7 +720,6 @@ const formularioAmpliado = FormSchema(
             'Promotor/a de capacitación entre pares',
             'No puedo asumir roles por ahora',
           ],
-          ayuda: 'Seleccione todas las que apliquen',
         ),
       ],
     ),

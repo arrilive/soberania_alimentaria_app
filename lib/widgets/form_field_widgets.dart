@@ -142,7 +142,10 @@ class CampoOpcionUnica extends StatelessWidget {
           const SizedBox(height: 8),
           TextFormField(
             initialValue: otroValor,
-            decoration: InputDecoration(labelText: otroLabel),
+            decoration: InputDecoration(
+              labelText: otroLabel,
+              hintText: 'Escriba aquí su respuesta',
+            ),
             onChanged: onOtroChanged,
           ),
         ],
@@ -235,7 +238,10 @@ class CampoOpcionMultiple extends StatelessWidget {
           const SizedBox(height: 8),
           TextFormField(
             initialValue: otroValor,
-            decoration: InputDecoration(labelText: otroLabel),
+            decoration: InputDecoration(
+              labelText: otroLabel,
+              hintText: 'Escriba aquí su respuesta',
+            ),
             onChanged: onOtroChanged,
           ),
         ],
@@ -461,12 +467,14 @@ class CampoTexto extends StatelessWidget {
   final TextEditingController controller;
   final TextInputType tipoTeclado;
   final int maxLineas;
+  final String? hintText;
 
   const CampoTexto({
     super.key,
     required this.controller,
     this.tipoTeclado = TextInputType.text,
     this.maxLineas = 1,
+    this.hintText,
   });
 
   @override
@@ -475,7 +483,9 @@ class CampoTexto extends StatelessWidget {
       controller: controller,
       keyboardType: tipoTeclado,
       maxLines: maxLineas,
-      decoration: const InputDecoration(hintText: 'Escriba su respuesta...'),
+      decoration: InputDecoration(
+        hintText: hintText ?? 'Escriba su respuesta...',
+      ),
     );
   }
 }

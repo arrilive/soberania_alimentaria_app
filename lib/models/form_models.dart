@@ -28,6 +28,7 @@ class FormFieldConfig {
   /// Si es true, agrega una opción final "Otros:" con campo de texto libre.
   final bool permiteOtro;
   final String otroLabel;
+  final String otroOpcionTexto;
 
   /// Para preguntas tipo singleChoice donde una respuesta específica
   /// (no necesariamente la última) dispara un campo de texto adicional.
@@ -46,6 +47,7 @@ class FormFieldConfig {
   final List<String>? mostrarSiValores;
 
   final String? ayuda;
+  final String? placeholder;
 
   const FormFieldConfig({
     required this.id,
@@ -58,11 +60,13 @@ class FormFieldConfig {
     this.requerido = false,
     this.permiteOtro = false,
     this.otroLabel = 'Otros:',
+    this.otroOpcionTexto = 'Otros',
     this.otroTriggerValor,
     this.maxSelecciones,
     this.dependeDe,
     this.mostrarSiValores,
     this.ayuda,
+    this.placeholder,
   });
 }
 

@@ -146,7 +146,6 @@ class _DynamicFormScreenState extends State<DynamicFormScreen> {
 
     final seccion = widget.schema.secciones[_seccionActual];
     final campos = _camposVisiblesDe(seccion);
-    final progreso = (_seccionActual + 1) / widget.schema.secciones.length;
     final esUltima = _seccionActual == widget.schema.secciones.length - 1;
 
     return Scaffold(
@@ -156,19 +155,30 @@ class _DynamicFormScreenState extends State<DynamicFormScreen> {
       ),
       body: Column(
         children: [
-          LinearProgressIndicator(
-              value: progreso, color: widget.colorAcento, minHeight: 4),
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    'Sección ${_seccionActual + 1} de ${widget.schema.secciones.length} · ${seccion.titulo}',
-                    style: Theme.of(context).textTheme.titleMedium,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(widget.schema.secciones.length, (i) {
+                final completada = i <= _seccionActual;
+                return Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 3),
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: completada ? widget.colorAcento : AppColors.borde,
                   ),
-                ),
-              ],
+                );
+              }),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            child: Text(
+              seccion.titulo,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.titleMedium,
             ),
           ),
           Expanded(
@@ -230,6 +240,7 @@ class _DynamicFormScreenState extends State<DynamicFormScreen> {
             onChanged: (v) => setState(() => _respuestas[campo.id] = v),
             permiteOtro: campo.permiteOtro,
             otroLabel: campo.otroLabel,
+            otroOpcionTexto: campo.otroOpcionTexto,
             otroTriggerValor: campo.otroTriggerValor,
             otroValor: _otros[campo.id],
             onOtroChanged: (texto) => _otros[campo.id] = texto,
@@ -245,6 +256,7 @@ class _DynamicFormScreenState extends State<DynamicFormScreen> {
             onChanged: (v) => setState(() => _respuestas[campo.id] = v),
             permiteOtro: campo.permiteOtro,
             otroLabel: campo.otroLabel,
+            otroOpcionTexto: campo.otroOpcionTexto,
             otroValor: _otros[campo.id],
             onOtroChanged: (texto) => _otros[campo.id] = texto,
             maxSelecciones: campo.maxSelecciones,
@@ -276,21 +288,33 @@ class _DynamicFormScreenState extends State<DynamicFormScreen> {
       case FieldType.text:
         final controller = _controladorPara(campo.id);
         return PreguntaContainer(
-            campo: campo, child: CampoTexto(controller: controller));
+          campo: campo,
+          child: CampoTexto(
+            controller: controller,
+            hintText: campo.placeholder,
+          ),
+        );
 
       case FieldType.number:
         final controller = _controladorPara(campo.id);
         return PreguntaContainer(
           campo: campo,
           child: CampoTexto(
-              controller: controller, tipoTeclado: TextInputType.number),
+            controller: controller,
+            tipoTeclado: TextInputType.number,
+            hintText: campo.placeholder,
+          ),
         );
 
       case FieldType.textArea:
         final controller = _controladorPara(campo.id);
         return PreguntaContainer(
           campo: campo,
-          child: CampoTexto(controller: controller, maxLineas: 4),
+          child: CampoTexto(
+            controller: controller,
+            maxLineas: 4,
+            hintText: campo.placeholder,
+          ),
         );
     }
   }

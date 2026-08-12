@@ -11,7 +11,7 @@ import 'catalogos.dart';
 /// ---------------------------------------------------------------------
 
 const _qComunidadVive = FormFieldConfig(
-  id: 'comunidad_vive',
+  id: 'p1_comunidad_vive',
   numero: '1',
   pregunta: '¿En qué comunidad o localidad vive?',
   tipo: FieldType.dropdown,
@@ -20,7 +20,7 @@ const _qComunidadVive = FormFieldConfig(
 );
 
 const _qComunidadTrabaja = FormFieldConfig(
-  id: 'comunidad_trabaja',
+  id: 'p1B_comunidad_trabaja',
   numero: '1B',
   pregunta: '¿En qué comunidad o localidad trabaja?',
   tipo: FieldType.dropdown,
@@ -28,7 +28,7 @@ const _qComunidadTrabaja = FormFieldConfig(
 );
 
 const _qConsentimiento = FormFieldConfig(
-  id: 'consentimiento',
+  id: 'p2_consentimiento',
   numero: '2',
   pregunta:
       '¿Acepta participar de manera voluntaria y entiende que la información '
@@ -39,7 +39,7 @@ const _qConsentimiento = FormFieldConfig(
 );
 
 const _qMunicipio = FormFieldConfig(
-  id: 'municipio',
+  id: 'p3_municipio',
   numero: '3',
   pregunta: '¿A qué municipio pertenece su comunidad?',
   tipo: FieldType.dropdown,
@@ -48,7 +48,7 @@ const _qMunicipio = FormFieldConfig(
 );
 
 const _qNombre = FormFieldConfig(
-  id: 'nombre',
+  id: 'p4_nombre',
   numero: '4',
   pregunta: '¿Cuál es su nombre?',
   tipo: FieldType.text,
@@ -56,7 +56,7 @@ const _qNombre = FormFieldConfig(
 );
 
 const _qTelefono = FormFieldConfig(
-  id: 'telefono',
+  id: 'p5_telefono',
   numero: '5',
   pregunta: '¿Tiene teléfono o WhatsApp para futuro contacto?',
   tipo: FieldType.number,
@@ -64,7 +64,7 @@ const _qTelefono = FormFieldConfig(
 );
 
 const _qInteresTaller = FormFieldConfig(
-  id: 'interes_taller',
+  id: 'p6_taller',
   numero: '6',
   pregunta:
       '¿Le gustaría recibir los resultados del diagnóstico y participar en '
@@ -74,7 +74,7 @@ const _qInteresTaller = FormFieldConfig(
 );
 
 const _qProductoPrincipal = FormFieldConfig(
-  id: 'producto_principal',
+  id: 'p7_cultivo_principal',
   numero: '7',
   pregunta:
       '¿Cuál es el producto o cultivo más importante en su actividad productiva?',
@@ -89,7 +89,7 @@ const _qProductoPrincipal = FormFieldConfig(
 );
 
 const _qFormaTrabajo = FormFieldConfig(
-  id: 'forma_trabajo',
+  id: 'p8_forma_trabajo',
   numero: '8',
   pregunta: '¿Cómo trabaja principalmente?',
   tipo: FieldType.singleChoice,
@@ -103,7 +103,7 @@ const _qFormaTrabajo = FormFieldConfig(
 );
 
 const _qComoVende = FormFieldConfig(
-  id: 'como_vende',
+  id: 'p9_distribucion',
   numero: '9',
   pregunta: '¿Cómo vende o distribuye principalmente su producto?',
   tipo: FieldType.multiChoice,
@@ -119,7 +119,7 @@ const _qComoVende = FormFieldConfig(
 );
 
 const _qMesesProduccion = FormFieldConfig(
-  id: 'meses_produccion',
+  id: 'p10_meses_alta',
   numero: '10',
   pregunta: '¿En qué meses tiene mayor producción?',
   tipo: FieldType.monthMultiSelect,
@@ -127,7 +127,7 @@ const _qMesesProduccion = FormFieldConfig(
 );
 
 const _qPracticasAgroecologicas = FormFieldConfig(
-  id: 'practicas_agroecologicas',
+  id: 'p11',
   numero: '11',
   pregunta:
       'Indique el nivel para cada práctica agroecológica en su unidad de producción:',
@@ -146,7 +146,7 @@ const _qPracticasAgroecologicas = FormFieldConfig(
 );
 
 const _qAfirmacionesSoberania = FormFieldConfig(
-  id: 'afirmaciones_soberania',
+  id: 'p14',
   numero: '14',
   pregunta:
       'Para cada afirmación, indique qué tan de acuerdo está con su situación actual:',
@@ -162,7 +162,7 @@ const _qAfirmacionesSoberania = FormFieldConfig(
 );
 
 const _qTiempoAVenta = FormFieldConfig(
-  id: 'tiempo_a_venta',
+  id: 'p16_tiempo_transporte',
   numero: '16',
   pregunta:
       '¿Cuánto tiempo tarda en llegar al lugar donde más vende su producto?',
@@ -177,7 +177,7 @@ const _qTiempoAVenta = FormFieldConfig(
 );
 
 const _qGastoTransporte = FormFieldConfig(
-  id: 'gasto_transporte',
+  id: 'p17_gasto_transporte',
   numero: '17',
   pregunta:
       '¿Cuánto gasta aproximadamente en transporte por cada viaje para vender '
@@ -187,7 +187,7 @@ const _qGastoTransporte = FormFieldConfig(
 );
 
 const _qFrecuenciaViajes = FormFieldConfig(
-  id: 'frecuencia_viajes',
+  id: 'p18_frecuencia_viajes',
   numero: '18',
   pregunta:
       '¿Con qué frecuencia hace viajes para vender o entregar su producto?',
@@ -202,7 +202,7 @@ const _qFrecuenciaViajes = FormFieldConfig(
 );
 
 const _qFrecuenciaPerdida = FormFieldConfig(
-  id: 'frecuencia_perdida',
+  id: 'p19_mermas',
   numero: '19',
   pregunta: '¿Con frecuencia el producto que cosecha se pierde antes de poder '
       'venderlo? (por daños, descomposición, transporte, etc.)',
@@ -211,7 +211,7 @@ const _qFrecuenciaPerdida = FormFieldConfig(
 );
 
 const _qRiesgosProbabilidad = FormFieldConfig(
-  id: 'riesgos_probabilidad',
+  id: 'p23',
   numero: '23',
   pregunta: 'Evalúe cada riesgo según su PROBABILIDAD:',
   tipo: FieldType.matrixSingle,
@@ -237,7 +237,7 @@ const _qRiesgosProbabilidad = FormFieldConfig(
 );
 
 const _qOtroRiesgo = FormFieldConfig(
-  id: 'otro_riesgo',
+  id: 'p25_otro_riesgo',
   numero: '25',
   pregunta:
       '¿Hay algún otro riesgo importante que enfrenta y que no aparece en la lista?',
@@ -246,7 +246,7 @@ const _qOtroRiesgo = FormFieldConfig(
 );
 
 const _qRolCadenaValor = FormFieldConfig(
-  id: 'rol_cadena_valor',
+  id: 'p26_rol',
   numero: '26',
   pregunta: '¿Cuál es su rol principal en la cadena de valor alimentaria?',
   tipo: FieldType.multiChoice,
@@ -262,7 +262,7 @@ const _qRolCadenaValor = FormFieldConfig(
 );
 
 const _qLlevaRegistro = FormFieldConfig(
-  id: 'lleva_registro',
+  id: 'p29_lleva_registro',
   numero: '29',
   pregunta: '¿Lleva algún tipo de registro de su producción, ventas o costos?',
   tipo: FieldType.singleChoice,
@@ -270,7 +270,7 @@ const _qLlevaRegistro = FormFieldConfig(
 );
 
 const _qDondeRegistra = FormFieldConfig(
-  id: 'donde_registra',
+  id: 'p30_donde_registra',
   numero: '30',
   pregunta: '¿Dónde registra principalmente su información productiva?',
   tipo: FieldType.multiChoice,
@@ -284,7 +284,7 @@ const _qDondeRegistra = FormFieldConfig(
 );
 
 const _qFrecuenciaRegistro = FormFieldConfig(
-  id: 'frecuencia_registro',
+  id: 'p31_frecuencia_registro',
   numero: '31',
   pregunta: '¿Con qué frecuencia registra su información?',
   tipo: FieldType.singleChoice,
@@ -298,7 +298,7 @@ const _qFrecuenciaRegistro = FormFieldConfig(
 );
 
 const _qApoyoRegistro = FormFieldConfig(
-  id: 'apoyo_registro',
+  id: 'p33_apoyo_registro',
   numero: '33',
   pregunta:
       '¿Qué tipo de apoyo necesitaría para poder llevar registros de manera regular?',
@@ -317,7 +317,7 @@ const _qApoyoRegistro = FormFieldConfig(
 );
 
 const _qProblemaUrgente = FormFieldConfig(
-  id: 'problema_urgente',
+  id: 'p35_problema_urgente',
   numero: '35',
   pregunta:
       '¿Cuál es el problema más urgente que enfrenta hoy en su cadena productiva?',
@@ -372,7 +372,7 @@ const formularioEjecutivo = FormSchema(
       campos: [
         _qPracticasAgroecologicas,
         FormFieldConfig(
-          id: 'destino_no_comercializado',
+          id: 'p12_destino',
           numero: '12',
           pregunta:
               '¿Qué destino le da al producto que no logra comercializar?',
@@ -450,7 +450,7 @@ const formularioAmpliado = FormSchema(
       campos: [
         _qPracticasAgroecologicas,
         FormFieldConfig(
-          id: 'razones_no_agroecologico',
+          id: 'p12_impedimentos',
           numero: '12',
           pregunta:
               '¿Cuáles son las principales razones que le impiden aplicar más '
@@ -469,7 +469,7 @@ const formularioAmpliado = FormSchema(
           ayuda: 'Seleccione todas las que apliquen',
         ),
         FormFieldConfig(
-          id: 'practica_exitosa',
+          id: 'p13_practica_exitosa',
           numero: '13',
           pregunta:
               'Describa brevemente una práctica agroecológica que le haya '
@@ -484,7 +484,7 @@ const formularioAmpliado = FormSchema(
       titulo: 'Vulnerabilidad y Logística',
       campos: [
         FormFieldConfig(
-          id: 'meses_dificil_acceso',
+          id: 'p15_meses_dificiles',
           numero: '15',
           pregunta:
               '¿En qué meses es más difícil acceder a alimentos sanos en cantidad suficiente?',
@@ -501,7 +501,7 @@ const formularioAmpliado = FormSchema(
       campos: [
         _qFrecuenciaPerdida,
         FormFieldConfig(
-          id: 'conoce_metodos_conservacion',
+          id: 'p19_conservacion',
           numero: '19B',
           pregunta:
               '¿Conoce métodos de conservación para aumentar la vida útil y valor de sus productos?',
@@ -511,7 +511,7 @@ const formularioAmpliado = FormSchema(
           otroLabel: 'Cuáles:',
         ),
         FormFieldConfig(
-          id: 'cuando_le_pagan',
+          id: 'p20_momento_pago',
           numero: '20',
           pregunta: '¿Cuándo le pagan normalmente por su producto?',
           tipo: FieldType.singleChoice,
@@ -523,7 +523,7 @@ const formularioAmpliado = FormSchema(
           ],
         ),
         FormFieldConfig(
-          id: 'requisitos_limitan',
+          id: 'p21_limitacion_requisitos',
           numero: '21',
           pregunta:
               '¿Los requisitos de calidad, empaque o inocuidad que le piden le '
@@ -536,7 +536,7 @@ const formularioAmpliado = FormSchema(
           ],
         ),
         FormFieldConfig(
-          id: 'requisitos_especificos',
+          id: 'p22_requisitos_dificiles',
           numero: '22',
           pregunta:
               'Si respondió que sí en la pregunta anterior, ¿qué requisitos '
@@ -552,7 +552,7 @@ const formularioAmpliado = FormSchema(
             'Transporte refrigerado o especial',
           ],
           permiteOtro: true,
-          dependeDe: 'requisitos_limitan',
+          dependeDe: 'p21_limitacion_requisitos',
           mostrarSiValores: ['Sí, me han limitado'],
         ),
       ],
@@ -564,7 +564,7 @@ const formularioAmpliado = FormSchema(
         _qOtroRiesgo,
         _qRolCadenaValor,
         FormFieldConfig(
-          id: 'confianza_red_logistica',
+          id: 'p27',
           numero: '27',
           pregunta: 'Para cada situación, indique qué tan de acuerdo estaría:',
           tipo: FieldType.matrixSingle,
@@ -585,7 +585,7 @@ const formularioAmpliado = FormSchema(
           ],
         ),
         FormFieldConfig(
-          id: 'factor_confianza_red',
+          id: 'p28_factores_confianza',
           numero: '28',
           pregunta: 'Seleccione los factores que más le darían confianza para '
               'participar en una red logística comunitaria.',
@@ -610,7 +610,7 @@ const formularioAmpliado = FormSchema(
         _qDondeRegistra,
         _qFrecuenciaRegistro,
         FormFieldConfig(
-          id: 'disposicion_registrar',
+          id: 'p32_disposicion_registro',
           numero: '32',
           pregunta:
               'Si registrar 10 datos básicos al mes le ayudara a mejorar sus '
@@ -632,7 +632,7 @@ const formularioAmpliado = FormSchema(
       titulo: 'Plan de Mejora y Acción',
       campos: [
         FormFieldConfig(
-          id: 'temas_capacitacion',
+          id: 'p34_temas_capacitacion',
           numero: '34',
           pregunta:
               '¿Cuáles son los 3 temas más importantes para usted en la capacitación?',
@@ -654,7 +654,7 @@ const formularioAmpliado = FormSchema(
         ),
         _qProblemaUrgente,
         FormFieldConfig(
-          id: 'formato_aprendizaje',
+          id: 'p36_formato_aprendizaje',
           numero: '36',
           pregunta:
               '¿Cómo le gustaría aprender? (Elija el formato que más le funcione)',
@@ -671,7 +671,7 @@ const formularioAmpliado = FormSchema(
           otroOpcionTexto: 'Otras',
         ),
         FormFieldConfig(
-          id: 'tiempo_disponible_capacitacion',
+          id: 'p37_tiempo_capacitacion',
           numero: '37',
           pregunta:
               '¿Cuánto tiempo puede dedicar a una sesión de capacitación sin que le afecte su trabajo?',
@@ -685,7 +685,7 @@ const formularioAmpliado = FormSchema(
           ],
         ),
         FormFieldConfig(
-          id: 'barreras_capacitacion',
+          id: 'p38_dificultad_asistencia',
           numero: '38',
           pregunta:
               '¿Qué es lo que más le dificulta asistir o participar en una capacitación?',
@@ -706,7 +706,7 @@ const formularioAmpliado = FormSchema(
           ayuda: 'Seleccione todas las que apliquen',
         ),
         FormFieldConfig(
-          id: 'actividades_red_comunitaria',
+          id: 'p39_actividades_red',
           numero: '39',
           pregunta:
               '¿En qué actividades de la red comunitaria podría participar?',

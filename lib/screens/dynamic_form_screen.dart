@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../data/catalogos.dart';
+import '../data/respuestas_repository.dart';
 import '../models/form_models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/form_field_widgets.dart';
@@ -117,10 +118,18 @@ class _DynamicFormScreenState extends State<DynamicFormScreen> {
             child: const Text('Seguir editando'),
           ),
           ElevatedButton(
-            onPressed: () {
-              Navigator.of(context).pop(); // cierra el diálogo
-              Navigator.of(context).pop(); // regresa a Home
-              ScaffoldMessenger.of(context).showSnackBar(
+            onPressed: () async {
+              final navigator = Navigator.of(context);
+              final messenger = ScaffoldMessenger.of(context);
+              await RespuestasRepository.instancia.guardarRespuesta(
+                schema: widget.schema,
+                respuestas: _respuestas,
+                otros: _otros,
+              );
+              if (!mounted) return;
+              navigator.pop(); // cierra el diálogo
+              navigator.pop(); // regresa a Home
+              messenger.showSnackBar(
                 const SnackBar(
                   content: Text('Diagnóstico guardado en este dispositivo.'),
                   backgroundColor: AppColors.exito,
@@ -136,10 +145,10 @@ class _DynamicFormScreenState extends State<DynamicFormScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final consentimiento = _respuestas['consentimiento'];
+    final consentimiento = _respuestas['p2_consentimiento'];
     if (consentimiento == 'No') {
       return _PantallaConsentimientoRechazado(onRegresar: () {
-        setState(() => _respuestas['consentimiento'] = null);
+        setState(() => _respuestas['p2_consentimiento'] = null);
       });
     }
 

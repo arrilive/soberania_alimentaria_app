@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../data/form_schemas.dart';
 import '../theme/app_theme.dart';
+import 'debug_respuestas_screen.dart';
 import 'dynamic_form_screen.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -11,6 +12,15 @@ class HomeScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Soberanía Alimentaria'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.bug_report_outlined),
+            tooltip: 'Debug (Respuestas Guardadas)',
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const DebugRespuestasScreen()),
+            ),
+          ),
+        ],
       ),
       body: SafeArea(
         child: ListView(
@@ -64,6 +74,17 @@ class HomeScreen extends StatelessWidget {
               'sincronizar más adelante cuando haya conexión a internet.',
               style: Theme.of(context).textTheme.bodyMedium,
               textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            Center(
+              child: TextButton.icon(
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                      builder: (_) => const DebugRespuestasScreen()),
+                ),
+                icon: const Icon(Icons.bug_report, size: 18),
+                label: const Text('Ver diagnósticos guardados (Debug)'),
+              ),
             ),
           ],
         ),

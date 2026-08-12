@@ -29,7 +29,8 @@ class HomeScreen extends StatelessWidget {
             const SizedBox(height: 24),
             _TarjetaFormulario(
               titulo: formularioEjecutivo.titulo,
-              descripcion: formularioEjecutivo.descripcionCorta,
+              descripcion:
+                  '${formularioEjecutivo.descripcionCorta} (${formularioEjecutivo.totalPreguntas} preguntas)',
               icono: Icons.checklist_rtl,
               color: AppColors.guinda,
               onTap: () => Navigator.of(context).push(
@@ -44,7 +45,8 @@ class HomeScreen extends StatelessWidget {
             const SizedBox(height: 16),
             _TarjetaFormulario(
               titulo: formularioAmpliado.titulo,
-              descripcion: formularioAmpliado.descripcionCorta,
+              descripcion:
+                  '${formularioAmpliado.descripcionCorta} (${formularioAmpliado.totalPreguntas} preguntas)',
               icono: Icons.fact_check_outlined,
               color: AppColors.guinda,
               onTap: () => Navigator.of(context).push(

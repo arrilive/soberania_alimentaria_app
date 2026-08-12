@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:math';
 import 'package:drift/drift.dart';
 import '../models/form_models.dart';
@@ -11,7 +12,7 @@ class RespuestasRepository {
   static final RespuestasRepository instancia = RespuestasRepository();
 
   /// Genera un identificador único local para cada registro offline.
-  String _generarIdLocal() {
+  String generarIdLocal() {
     final now = DateTime.now().millisecondsSinceEpoch;
     final random = Random().nextInt(999999).toString().padLeft(6, '0');
     return 'local_${now}_$random';
@@ -25,26 +26,36 @@ class RespuestasRepository {
     return valor.toString();
   }
 
-  /// Guarda una respuesta completa del diagnóstico en la base de datos local SQLite.
-  Future<void> guardarRespuesta({
+  /// Método privado para construir un Companion reutilizable entre guardarRespuesta y guardarBorrador.
+  RespuestasDiagnosticoCompanion _crearCompanion({
+    required String idLocal,
+    required String syncStatus,
     required FormSchema schema,
     required Map<String, dynamic> respuestas,
     required Map<String, String> otros,
-  }) async {
-    final idLocal = _generarIdLocal();
-    final fecha = DateTime.now();
+    int seccionActual = 0,
+    DateTime? fecha,
+  }) {
+    final fechaCaptura = fecha ?? DateTime.now();
 
-    // Extraer valores de Matrices
     final p11Map = (respuestas['p11'] as Map<String, String>?) ?? {};
     final p14Map = (respuestas['p14'] as Map<String, String>?) ?? {};
     final p23Map = (respuestas['p23'] as Map<String, String>?) ?? {};
     final p27Map = (respuestas['p27'] as Map<String, String>?) ?? {};
 
-    final companion = RespuestasDiagnosticoCompanion(
+    final borradorJsonData = jsonEncode({
+      'seccionActual': seccionActual,
+      'respuestas':
+          respuestas.map((k, v) => MapEntry(k, v is Set ? v.toList() : v)),
+      'otros': otros,
+    });
+
+    return RespuestasDiagnosticoCompanion(
       idLocal: Value(idLocal),
-      syncStatus: const Value('pendiente'),
-      fechaCapturaLocal: Value(fecha),
+      syncStatus: Value(syncStatus),
+      fechaCapturaLocal: Value(fechaCaptura),
       formulario: Value(schema.id), // 'ejecutivo' | 'ampliado'
+      borradorJson: Value(borradorJsonData),
 
       p1ComunidadVive: Value(_formatearValor(respuestas['p1_comunidad_vive'])),
       p1BComunidadTrabaja:
@@ -189,8 +200,112 @@ class RespuestasRepository {
       p39ActividadesRed:
           Value(_formatearValor(respuestas['p39_actividades_red'])),
     );
+  }
 
-    await _db.into(_db.respuestasDiagnostico).insert(companion);
+  /// Guarda una respuesta completa del diagnóstico con syncStatus = 'pendiente'.
+  Future<void> guardarRespuesta({
+    required FormSchema schema,
+    required Map<String, dynamic> respuestas,
+    required Map<String, String> otros,
+    String? idLocal,
+  }) async {
+    final id = idLocal ?? generarIdLocal();
+    final companion = _crearCompanion(
+      idLocal: id,
+      syncStatus: 'pendiente',
+      schema: schema,
+      respuestas: respuestas,
+      otros: otros,
+    );
+    await _db.into(_db.respuestasDiagnostico).insertOnConflictUpdate(companion);
+  }
+
+  /// Guarda o actualiza un borrador del diagnóstico con syncStatus = 'borrador'.
+  Future<void> guardarBorrador({
+    required String idLocal,
+    required FormSchema schema,
+    required Map<String, dynamic> respuestas,
+    required Map<String, String> otros,
+    int seccionActual = 0,
+  }) async {
+    final companion = _crearCompanion(
+      idLocal: idLocal,
+      syncStatus: 'borrador',
+      schema: schema,
+      respuestas: respuestas,
+      otros: otros,
+      seccionActual: seccionActual,
+    );
+    await _db.into(_db.respuestasDiagnostico).insertOnConflictUpdate(companion);
+  }
+
+  /// Finaliza una respuesta existente cambiando únicamente su syncStatus a 'pendiente'.
+  Future<void> finalizarRespuesta(String idLocal) async {
+    await (_db.update(_db.respuestasDiagnostico)
+          ..where((t) => t.idLocal.equals(idLocal)))
+        .write(
+      const RespuestasDiagnosticoCompanion(
+        syncStatus: Value('pendiente'),
+      ),
+    );
+  }
+
+  /// Elimina un borrador específico por idLocal.
+  Future<void> eliminarBorrador(String idLocal) async {
+    await (_db.delete(_db.respuestasDiagnostico)
+          ..where((t) => t.idLocal.equals(idLocal)))
+        .go();
+  }
+
+  /// Busca el borrador activo más reciente para un tipo de formulario ('ejecutivo' o 'ampliado').
+  Future<RespuestasDiagnosticoData?> buscarBorradorActivo(
+      String formularioId) async {
+    final query = _db.select(_db.respuestasDiagnostico)
+      ..where((t) =>
+          t.formulario.equals(formularioId) & t.syncStatus.equals('borrador'))
+      ..orderBy([
+        (t) => OrderingTerm(
+            expression: t.fechaCapturaLocal, mode: OrderingMode.desc)
+      ])
+      ..limit(1);
+
+    final list = await query.get();
+    return list.isNotEmpty ? list.first : null;
+  }
+
+  /// Deserializa el snapshot JSON guardado en un borrador de vuelta a mapas de respuestas, otros y seccionActual.
+  Map<String, dynamic> deserializarBorrador(RespuestasDiagnosticoData draft) {
+    if (draft.borradorJson == null || draft.borradorJson!.isEmpty) {
+      return {
+        'seccionActual': 0,
+        'respuestas': <String, dynamic>{},
+        'otros': <String, String>{},
+      };
+    }
+
+    final decoded = jsonDecode(draft.borradorJson!) as Map<String, dynamic>;
+    final seccionActual = (decoded['seccionActual'] as int?) ?? 0;
+    final rawRespuestas =
+        (decoded['respuestas'] as Map<String, dynamic>?) ?? {};
+
+    final respuestasReconstruidas = rawRespuestas.map((k, v) {
+      if (v is List) {
+        return MapEntry(k, v.cast<String>().toSet());
+      } else if (v is Map) {
+        return MapEntry(k, v.cast<String, String>());
+      } else {
+        return MapEntry(k, v);
+      }
+    });
+
+    final otrosReconstruidos =
+        Map<String, String>.from((decoded['otros'] as Map?) ?? {});
+
+    return {
+      'seccionActual': seccionActual,
+      'respuestas': respuestasReconstruidas,
+      'otros': otrosReconstruidos,
+    };
   }
 
   /// Lista todas las respuestas guardadas localmente, ordenadas de la más reciente a la más antigua.

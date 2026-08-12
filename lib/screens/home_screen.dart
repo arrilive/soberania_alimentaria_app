@@ -1,11 +1,98 @@
 import 'package:flutter/material.dart';
 import '../data/form_schemas.dart';
+import '../data/respuestas_repository.dart';
+import '../models/form_models.dart';
 import '../theme/app_theme.dart';
 import 'debug_respuestas_screen.dart';
 import 'dynamic_form_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
+
+  Future<void> _abrirFormulario(
+      BuildContext context, FormSchema schema, Color colorAcento) async {
+    final borrador =
+        await RespuestasRepository.instancia.buscarBorradorActivo(schema.id);
+
+    if (!context.mounted) return;
+
+    if (borrador == null) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => DynamicFormScreen(
+            schema: schema,
+            colorAcento: colorAcento,
+          ),
+        ),
+      );
+      return;
+    }
+
+    final fecha = borrador.fechaCapturaLocal;
+    final dia = fecha.day.toString().padLeft(2, '0');
+    final mes = fecha.month.toString().padLeft(2, '0');
+    final anio = fecha.year;
+    final hora = fecha.hour.toString().padLeft(2, '0');
+    final min = fecha.minute.toString().padLeft(2, '0');
+    final fechaFormateada = '$dia/$mes/$anio a las $hora:$min';
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Diagnóstico no terminado'),
+        content: Text(
+          'Tienes un diagnóstico ${schema.titulo.toLowerCase()} sin terminar '
+          '(guardado el $fechaFormateada).\n\n'
+          '¿Deseas continuarlo o empezar uno nuevo?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () async {
+              Navigator.of(dialogContext).pop();
+              await RespuestasRepository.instancia
+                  .eliminarBorrador(borrador.idLocal);
+              if (!context.mounted) return;
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => DynamicFormScreen(
+                    schema: schema,
+                    colorAcento: colorAcento,
+                  ),
+                ),
+              );
+            },
+            child: const Text('Empezar nuevo'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(dialogContext).pop();
+              final deserializado =
+                  RespuestasRepository.instancia.deserializarBorrador(borrador);
+              final respuestas =
+                  deserializado['respuestas'] as Map<String, dynamic>;
+              final otros = deserializado['otros'] as Map<String, String>;
+              final seccionInicial =
+                  (deserializado['seccionActual'] as int?) ?? 0;
+
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => DynamicFormScreen(
+                    schema: schema,
+                    colorAcento: colorAcento,
+                    idLocalExistente: borrador.idLocal,
+                    respuestasIniciales: respuestas,
+                    otrosIniciales: otros,
+                    seccionInicial: seccionInicial,
+                  ),
+                ),
+              );
+            },
+            child: const Text('Continuar'),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,14 +130,8 @@ class HomeScreen extends StatelessWidget {
                   '${formularioEjecutivo.descripcionCorta} (${formularioEjecutivo.totalPreguntas} preguntas)',
               icono: Icons.checklist_rtl,
               color: AppColors.guinda,
-              onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const DynamicFormScreen(
-                    schema: formularioEjecutivo,
-                    colorAcento: AppColors.guinda,
-                  ),
-                ),
-              ),
+              onTap: () => _abrirFormulario(
+                  context, formularioEjecutivo, AppColors.guinda),
             ),
             const SizedBox(height: 16),
             _TarjetaFormulario(
@@ -59,14 +140,8 @@ class HomeScreen extends StatelessWidget {
                   '${formularioAmpliado.descripcionCorta} (${formularioAmpliado.totalPreguntas} preguntas)',
               icono: Icons.fact_check_outlined,
               color: AppColors.guinda,
-              onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const DynamicFormScreen(
-                    schema: formularioAmpliado,
-                    colorAcento: AppColors.guinda,
-                  ),
-                ),
-              ),
+              onTap: () => _abrirFormulario(
+                  context, formularioAmpliado, AppColors.guinda),
             ),
             const SizedBox(height: 24),
             Text(

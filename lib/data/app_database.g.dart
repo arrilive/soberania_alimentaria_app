@@ -29,6 +29,12 @@ class $RespuestasDiagnosticoTable extends RespuestasDiagnostico
   late final GeneratedColumn<DateTime> fechaCapturaLocal =
       GeneratedColumn<DateTime>('fecha_captura_local', aliasedName, false,
           type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _borradorJsonMeta =
+      const VerificationMeta('borradorJson');
+  @override
+  late final GeneratedColumn<String> borradorJson = GeneratedColumn<String>(
+      'borrador_json', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
   static const VerificationMeta _formularioMeta =
       const VerificationMeta('formulario');
   @override
@@ -593,6 +599,7 @@ class $RespuestasDiagnosticoTable extends RespuestasDiagnostico
         idLocal,
         syncStatus,
         fechaCapturaLocal,
+        borradorJson,
         formulario,
         p1ComunidadVive,
         p1BComunidadTrabaja,
@@ -717,6 +724,12 @@ class $RespuestasDiagnosticoTable extends RespuestasDiagnostico
               data['fecha_captura_local']!, _fechaCapturaLocalMeta));
     } else if (isInserting) {
       context.missing(_fechaCapturaLocalMeta);
+    }
+    if (data.containsKey('borrador_json')) {
+      context.handle(
+          _borradorJsonMeta,
+          borradorJson.isAcceptableOrUnknown(
+              data['borrador_json']!, _borradorJsonMeta));
     }
     if (data.containsKey('formulario')) {
       context.handle(
@@ -1281,6 +1294,8 @@ class $RespuestasDiagnosticoTable extends RespuestasDiagnostico
       fechaCapturaLocal: attachedDatabase.typeMapping.read(
           DriftSqlType.dateTime,
           data['${effectivePrefix}fecha_captura_local'])!,
+      borradorJson: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}borrador_json']),
       formulario: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}formulario']),
       p1ComunidadVive: attachedDatabase.typeMapping.read(
@@ -1501,6 +1516,7 @@ class RespuestasDiagnosticoData extends DataClass
   final String idLocal;
   final String syncStatus;
   final DateTime fechaCapturaLocal;
+  final String? borradorJson;
   final String? formulario;
   final String? p1ComunidadVive;
   final String? p1BComunidadTrabaja;
@@ -1598,6 +1614,7 @@ class RespuestasDiagnosticoData extends DataClass
       {required this.idLocal,
       required this.syncStatus,
       required this.fechaCapturaLocal,
+      this.borradorJson,
       this.formulario,
       this.p1ComunidadVive,
       this.p1BComunidadTrabaja,
@@ -1697,6 +1714,9 @@ class RespuestasDiagnosticoData extends DataClass
     map['id_local'] = Variable<String>(idLocal);
     map['sync_status'] = Variable<String>(syncStatus);
     map['fecha_captura_local'] = Variable<DateTime>(fechaCapturaLocal);
+    if (!nullToAbsent || borradorJson != null) {
+      map['borrador_json'] = Variable<String>(borradorJson);
+    }
     if (!nullToAbsent || formulario != null) {
       map['formulario'] = Variable<String>(formulario);
     }
@@ -1994,6 +2014,9 @@ class RespuestasDiagnosticoData extends DataClass
       idLocal: Value(idLocal),
       syncStatus: Value(syncStatus),
       fechaCapturaLocal: Value(fechaCapturaLocal),
+      borradorJson: borradorJson == null && nullToAbsent
+          ? const Value.absent()
+          : Value(borradorJson),
       formulario: formulario == null && nullToAbsent
           ? const Value.absent()
           : Value(formulario),
@@ -2286,6 +2309,7 @@ class RespuestasDiagnosticoData extends DataClass
       syncStatus: serializer.fromJson<String>(json['syncStatus']),
       fechaCapturaLocal:
           serializer.fromJson<DateTime>(json['fechaCapturaLocal']),
+      borradorJson: serializer.fromJson<String?>(json['borradorJson']),
       formulario: serializer.fromJson<String?>(json['formulario']),
       p1ComunidadVive: serializer.fromJson<String?>(json['p1ComunidadVive']),
       p1BComunidadTrabaja:
@@ -2422,6 +2446,7 @@ class RespuestasDiagnosticoData extends DataClass
       'idLocal': serializer.toJson<String>(idLocal),
       'syncStatus': serializer.toJson<String>(syncStatus),
       'fechaCapturaLocal': serializer.toJson<DateTime>(fechaCapturaLocal),
+      'borradorJson': serializer.toJson<String?>(borradorJson),
       'formulario': serializer.toJson<String?>(formulario),
       'p1ComunidadVive': serializer.toJson<String?>(p1ComunidadVive),
       'p1BComunidadTrabaja': serializer.toJson<String?>(p1BComunidadTrabaja),
@@ -2536,6 +2561,7 @@ class RespuestasDiagnosticoData extends DataClass
           {String? idLocal,
           String? syncStatus,
           DateTime? fechaCapturaLocal,
+          Value<String?> borradorJson = const Value.absent(),
           Value<String?> formulario = const Value.absent(),
           Value<String?> p1ComunidadVive = const Value.absent(),
           Value<String?> p1BComunidadTrabaja = const Value.absent(),
@@ -2633,6 +2659,8 @@ class RespuestasDiagnosticoData extends DataClass
         idLocal: idLocal ?? this.idLocal,
         syncStatus: syncStatus ?? this.syncStatus,
         fechaCapturaLocal: fechaCapturaLocal ?? this.fechaCapturaLocal,
+        borradorJson:
+            borradorJson.present ? borradorJson.value : this.borradorJson,
         formulario: formulario.present ? formulario.value : this.formulario,
         p1ComunidadVive: p1ComunidadVive.present
             ? p1ComunidadVive.value
@@ -2861,6 +2889,9 @@ class RespuestasDiagnosticoData extends DataClass
       fechaCapturaLocal: data.fechaCapturaLocal.present
           ? data.fechaCapturaLocal.value
           : this.fechaCapturaLocal,
+      borradorJson: data.borradorJson.present
+          ? data.borradorJson.value
+          : this.borradorJson,
       formulario:
           data.formulario.present ? data.formulario.value : this.formulario,
       p1ComunidadVive: data.p1ComunidadVive.present
@@ -3122,6 +3153,7 @@ class RespuestasDiagnosticoData extends DataClass
           ..write('idLocal: $idLocal, ')
           ..write('syncStatus: $syncStatus, ')
           ..write('fechaCapturaLocal: $fechaCapturaLocal, ')
+          ..write('borradorJson: $borradorJson, ')
           ..write('formulario: $formulario, ')
           ..write('p1ComunidadVive: $p1ComunidadVive, ')
           ..write('p1BComunidadTrabaja: $p1BComunidadTrabaja, ')
@@ -3224,6 +3256,7 @@ class RespuestasDiagnosticoData extends DataClass
         idLocal,
         syncStatus,
         fechaCapturaLocal,
+        borradorJson,
         formulario,
         p1ComunidadVive,
         p1BComunidadTrabaja,
@@ -3325,6 +3358,7 @@ class RespuestasDiagnosticoData extends DataClass
           other.idLocal == this.idLocal &&
           other.syncStatus == this.syncStatus &&
           other.fechaCapturaLocal == this.fechaCapturaLocal &&
+          other.borradorJson == this.borradorJson &&
           other.formulario == this.formulario &&
           other.p1ComunidadVive == this.p1ComunidadVive &&
           other.p1BComunidadTrabaja == this.p1BComunidadTrabaja &&
@@ -3426,6 +3460,7 @@ class RespuestasDiagnosticoCompanion
   final Value<String> idLocal;
   final Value<String> syncStatus;
   final Value<DateTime> fechaCapturaLocal;
+  final Value<String?> borradorJson;
   final Value<String?> formulario;
   final Value<String?> p1ComunidadVive;
   final Value<String?> p1BComunidadTrabaja;
@@ -3524,6 +3559,7 @@ class RespuestasDiagnosticoCompanion
     this.idLocal = const Value.absent(),
     this.syncStatus = const Value.absent(),
     this.fechaCapturaLocal = const Value.absent(),
+    this.borradorJson = const Value.absent(),
     this.formulario = const Value.absent(),
     this.p1ComunidadVive = const Value.absent(),
     this.p1BComunidadTrabaja = const Value.absent(),
@@ -3623,6 +3659,7 @@ class RespuestasDiagnosticoCompanion
     required String idLocal,
     this.syncStatus = const Value.absent(),
     required DateTime fechaCapturaLocal,
+    this.borradorJson = const Value.absent(),
     this.formulario = const Value.absent(),
     this.p1ComunidadVive = const Value.absent(),
     this.p1BComunidadTrabaja = const Value.absent(),
@@ -3723,6 +3760,7 @@ class RespuestasDiagnosticoCompanion
     Expression<String>? idLocal,
     Expression<String>? syncStatus,
     Expression<DateTime>? fechaCapturaLocal,
+    Expression<String>? borradorJson,
     Expression<String>? formulario,
     Expression<String>? p1ComunidadVive,
     Expression<String>? p1BComunidadTrabaja,
@@ -3822,6 +3860,7 @@ class RespuestasDiagnosticoCompanion
       if (idLocal != null) 'id_local': idLocal,
       if (syncStatus != null) 'sync_status': syncStatus,
       if (fechaCapturaLocal != null) 'fecha_captura_local': fechaCapturaLocal,
+      if (borradorJson != null) 'borrador_json': borradorJson,
       if (formulario != null) 'formulario': formulario,
       if (p1ComunidadVive != null) 'p1_comunidad_vive': p1ComunidadVive,
       if (p1BComunidadTrabaja != null)
@@ -3953,6 +3992,7 @@ class RespuestasDiagnosticoCompanion
       {Value<String>? idLocal,
       Value<String>? syncStatus,
       Value<DateTime>? fechaCapturaLocal,
+      Value<String?>? borradorJson,
       Value<String?>? formulario,
       Value<String?>? p1ComunidadVive,
       Value<String?>? p1BComunidadTrabaja,
@@ -4051,6 +4091,7 @@ class RespuestasDiagnosticoCompanion
       idLocal: idLocal ?? this.idLocal,
       syncStatus: syncStatus ?? this.syncStatus,
       fechaCapturaLocal: fechaCapturaLocal ?? this.fechaCapturaLocal,
+      borradorJson: borradorJson ?? this.borradorJson,
       formulario: formulario ?? this.formulario,
       p1ComunidadVive: p1ComunidadVive ?? this.p1ComunidadVive,
       p1BComunidadTrabaja: p1BComunidadTrabaja ?? this.p1BComunidadTrabaja,
@@ -4173,6 +4214,9 @@ class RespuestasDiagnosticoCompanion
     }
     if (fechaCapturaLocal.present) {
       map['fecha_captura_local'] = Variable<DateTime>(fechaCapturaLocal.value);
+    }
+    if (borradorJson.present) {
+      map['borrador_json'] = Variable<String>(borradorJson.value);
     }
     if (formulario.present) {
       map['formulario'] = Variable<String>(formulario.value);
@@ -4488,6 +4532,7 @@ class RespuestasDiagnosticoCompanion
           ..write('idLocal: $idLocal, ')
           ..write('syncStatus: $syncStatus, ')
           ..write('fechaCapturaLocal: $fechaCapturaLocal, ')
+          ..write('borradorJson: $borradorJson, ')
           ..write('formulario: $formulario, ')
           ..write('p1ComunidadVive: $p1ComunidadVive, ')
           ..write('p1BComunidadTrabaja: $p1BComunidadTrabaja, ')
@@ -4604,6 +4649,7 @@ typedef $$RespuestasDiagnosticoTableCreateCompanionBuilder
   required String idLocal,
   Value<String> syncStatus,
   required DateTime fechaCapturaLocal,
+  Value<String?> borradorJson,
   Value<String?> formulario,
   Value<String?> p1ComunidadVive,
   Value<String?> p1BComunidadTrabaja,
@@ -4704,6 +4750,7 @@ typedef $$RespuestasDiagnosticoTableUpdateCompanionBuilder
   Value<String> idLocal,
   Value<String> syncStatus,
   Value<DateTime> fechaCapturaLocal,
+  Value<String?> borradorJson,
   Value<String?> formulario,
   Value<String?> p1ComunidadVive,
   Value<String?> p1BComunidadTrabaja,
@@ -4818,6 +4865,9 @@ class $$RespuestasDiagnosticoTableFilterComposer
   ColumnFilters<DateTime> get fechaCapturaLocal => $composableBuilder(
       column: $table.fechaCapturaLocal,
       builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get borradorJson => $composableBuilder(
+      column: $table.borradorJson, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get formulario => $composableBuilder(
       column: $table.formulario, builder: (column) => ColumnFilters(column));
@@ -5176,6 +5226,10 @@ class $$RespuestasDiagnosticoTableOrderingComposer
 
   ColumnOrderings<DateTime> get fechaCapturaLocal => $composableBuilder(
       column: $table.fechaCapturaLocal,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get borradorJson => $composableBuilder(
+      column: $table.borradorJson,
       builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get formulario => $composableBuilder(
@@ -5551,6 +5605,9 @@ class $$RespuestasDiagnosticoTableAnnotationComposer
   GeneratedColumn<DateTime> get fechaCapturaLocal => $composableBuilder(
       column: $table.fechaCapturaLocal, builder: (column) => column);
 
+  GeneratedColumn<String> get borradorJson => $composableBuilder(
+      column: $table.borradorJson, builder: (column) => column);
+
   GeneratedColumn<String> get formulario => $composableBuilder(
       column: $table.formulario, builder: (column) => column);
 
@@ -5865,6 +5922,7 @@ class $$RespuestasDiagnosticoTableTableManager extends RootTableManager<
             Value<String> idLocal = const Value.absent(),
             Value<String> syncStatus = const Value.absent(),
             Value<DateTime> fechaCapturaLocal = const Value.absent(),
+            Value<String?> borradorJson = const Value.absent(),
             Value<String?> formulario = const Value.absent(),
             Value<String?> p1ComunidadVive = const Value.absent(),
             Value<String?> p1BComunidadTrabaja = const Value.absent(),
@@ -5964,6 +6022,7 @@ class $$RespuestasDiagnosticoTableTableManager extends RootTableManager<
             idLocal: idLocal,
             syncStatus: syncStatus,
             fechaCapturaLocal: fechaCapturaLocal,
+            borradorJson: borradorJson,
             formulario: formulario,
             p1ComunidadVive: p1ComunidadVive,
             p1BComunidadTrabaja: p1BComunidadTrabaja,
@@ -6063,6 +6122,7 @@ class $$RespuestasDiagnosticoTableTableManager extends RootTableManager<
             required String idLocal,
             Value<String> syncStatus = const Value.absent(),
             required DateTime fechaCapturaLocal,
+            Value<String?> borradorJson = const Value.absent(),
             Value<String?> formulario = const Value.absent(),
             Value<String?> p1ComunidadVive = const Value.absent(),
             Value<String?> p1BComunidadTrabaja = const Value.absent(),
@@ -6162,6 +6222,7 @@ class $$RespuestasDiagnosticoTableTableManager extends RootTableManager<
             idLocal: idLocal,
             syncStatus: syncStatus,
             fechaCapturaLocal: fechaCapturaLocal,
+            borradorJson: borradorJson,
             formulario: formulario,
             p1ComunidadVive: p1ComunidadVive,
             p1BComunidadTrabaja: p1BComunidadTrabaja,

@@ -135,4 +135,93 @@ void main() {
     final pendientes = await repository.contarPendientes();
     expect(pendientes, 1);
   });
+
+  test(
+      'guardarBorrador, buscarBorradorActivo, deserializarBorrador y finalizarRespuesta funcionan correctamente',
+      () async {
+    final idLocal = repository.generarIdLocal();
+    final respuestas = <String, dynamic>{
+      'p1_comunidad_vive': 'Chimay',
+      'p7_cultivo_principal': <String>{
+        'Milpa (maíz, frijol, calabaza)',
+        'Otros'
+      },
+      'p11': <String, String>{
+        'Policultivo o rotación (milpa, hortaliza)': 'Siempre',
+      },
+    };
+    final otros = <String, String>{
+      'p7_cultivo_principal': 'Calabaza local',
+    };
+
+    // 1. Guardar borrador
+    await repository.guardarBorrador(
+      idLocal: idLocal,
+      schema: formularioEjecutivo,
+      respuestas: respuestas,
+      otros: otros,
+    );
+
+    // No debe contarse como pendiente de sincronización
+    expect(await repository.contarPendientes(), 0);
+
+    // 2. Buscar borrador activo
+    final borrador = await repository.buscarBorradorActivo('ejecutivo');
+    expect(borrador, isNotNull);
+    expect(borrador!.idLocal, idLocal);
+    expect(borrador.syncStatus, 'borrador');
+
+    // 3. Deserializar borrador
+    final deserializado = repository.deserializarBorrador(borrador);
+    final respuestasRestauradas =
+        deserializado['respuestas'] as Map<String, dynamic>;
+    final otrosRestaurados = deserializado['otros'] as Map<String, String>;
+
+    expect(respuestasRestauradas['p1_comunidad_vive'], 'Chimay');
+    expect(respuestasRestauradas['p7_cultivo_principal'], isA<Set<String>>());
+    expect(respuestasRestauradas['p7_cultivo_principal'],
+        contains('Milpa (maíz, frijol, calabaza)'));
+    expect(respuestasRestauradas['p7_cultivo_principal'], contains('Otros'));
+    expect(respuestasRestauradas['p11'], isA<Map<String, String>>());
+    expect(
+        respuestasRestauradas['p11']
+            ['Policultivo o rotación (milpa, hortaliza)'],
+        'Siempre');
+    expect(otrosRestaurados['p7_cultivo_principal'], 'Calabaza local');
+
+    // 4. Finalizar respuesta
+    await repository.finalizarRespuesta(idLocal);
+    expect(await repository.contarPendientes(), 1);
+    expect(await repository.buscarBorradorActivo('ejecutivo'), isNull);
+
+    // 5. Eliminar borrador test
+    await repository.guardarBorrador(
+      idLocal: 'test_id_borrador_borrar',
+      schema: formularioEjecutivo,
+      respuestas: {},
+      otros: {},
+    );
+    expect(await repository.buscarBorradorActivo('ejecutivo'), isNotNull);
+    await repository.eliminarBorrador('test_id_borrador_borrar');
+    expect(await repository.buscarBorradorActivo('ejecutivo'), isNull);
+  });
+
+  test(
+      'guardarBorrador con seccionActual != 0 guarda y recupera la sección correctamente',
+      () async {
+    final idLocal = repository.generarIdLocal();
+    await repository.guardarBorrador(
+      idLocal: idLocal,
+      schema: formularioEjecutivo,
+      respuestas: {'p1_comunidad_vive': 'Chimay'},
+      otros: {},
+      seccionActual: 3,
+    );
+
+    final borrador = await repository.buscarBorradorActivo('ejecutivo');
+    expect(borrador, isNotNull);
+
+    final deserializado = repository.deserializarBorrador(borrador!);
+    expect(deserializado['seccionActual'], 3);
+  });
 }

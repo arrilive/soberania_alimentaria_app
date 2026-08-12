@@ -12,9 +12,15 @@ part 'app_database.g.dart';
 class RespuestasDiagnostico extends Table {
   // --- COLUMNAS DE CONTROL LOCAL (Solo para uso offline en la app) ---
   TextColumn get idLocal => text()(); // UUID local
+  // Valores válidos para syncStatus:
+  // - 'borrador': encuesta en progreso, sin terminar (autoguardado local)
+  // - 'pendiente': completada, lista para sincronización a servidor
+  // - 'enviado': sincronizada exitosamente al servidor (Fase 2)
   TextColumn get syncStatus =>
       text().withDefault(const Constant('pendiente'))();
   DateTimeColumn get fechaCapturaLocal => dateTime()();
+  TextColumn get borradorJson =>
+      text().nullable()(); // Snapshot JSON local del estado de respuestas
 
   // --- COLUMNAS DE DATOS (Mismo esquema que MySQL respuestas_diagnostico) ---
   TextColumn get formulario => text().nullable()(); // 'ejecutivo' | 'ampliado'
@@ -137,7 +143,21 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _abrirConexion());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  // NOTA IMPORTANTE DE MIGRACIÓN:
+  // CADA cambio futuro de columna en la base de datos (por ejemplo en Fase 2:
+  // uuid_local, campos del encuestador, etc.) REQUIERE incrementar schemaVersion
+  // en +1 y agregar su correspondiente paso de migración en esta estrategia (onUpgrade).
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+        onUpgrade: (m, from, to) async {
+          if (from < 2) {
+            await m.addColumn(
+                respuestasDiagnostico, respuestasDiagnostico.borradorJson);
+          }
+        },
+      );
 }
 
 LazyDatabase _abrirConexion() {

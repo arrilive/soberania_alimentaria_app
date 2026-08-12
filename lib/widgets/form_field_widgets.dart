@@ -7,13 +7,19 @@ import '../theme/app_theme.dart';
 /// su tipo, así la persona siempre sabe qué está respondiendo.
 class PreguntaContainer extends StatelessWidget {
   final FormFieldConfig campo;
+  final Object? numeroSecuencial;
   final Widget child;
 
-  const PreguntaContainer(
-      {super.key, required this.campo, required this.child});
+  const PreguntaContainer({
+    super.key,
+    required this.campo,
+    this.numeroSecuencial,
+    required this.child,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final numeroAMostrar = numeroSecuencial ?? campo.numero;
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -25,7 +31,7 @@ class PreguntaContainer extends StatelessWidget {
                 style: Theme.of(context).textTheme.titleMedium,
                 children: [
                   TextSpan(
-                    text: '${campo.numero}. ',
+                    text: '$numeroAMostrar. ',
                     style: const TextStyle(
                         color: AppColors.guinda, fontWeight: FontWeight.w700),
                   ),

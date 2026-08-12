@@ -143,6 +143,16 @@ class _DynamicFormScreenState extends State<DynamicFormScreen> {
       });
     }
 
+    final Map<String, int> indicesSecuenciales = {};
+    int contadorSecuencial = 1;
+    for (final s in widget.schema.secciones) {
+      for (final c in s.campos) {
+        if (_campoVisible(c)) {
+          indicesSecuenciales[c.id] = contadorSecuencial++;
+        }
+      }
+    }
+
     final seccion = widget.schema.secciones[_seccionActual];
     final campos = _camposVisiblesDe(seccion);
     final esUltima = _seccionActual == widget.schema.secciones.length - 1;
@@ -185,7 +195,12 @@ class _DynamicFormScreenState extends State<DynamicFormScreen> {
               key: ValueKey(_seccionActual),
               padding: const EdgeInsets.symmetric(horizontal: 16),
               itemCount: campos.length,
-              itemBuilder: (context, index) => _construirCampo(campos[index]),
+              itemBuilder: (context, index) {
+                final campo = campos[index];
+                final numSecuencial =
+                    indicesSecuenciales[campo.id] ?? 0;
+                return _construirCampo(campo, numSecuencial);
+              },
             ),
           ),
           SafeArea(
@@ -219,11 +234,12 @@ class _DynamicFormScreenState extends State<DynamicFormScreen> {
     );
   }
 
-  Widget _construirCampo(FormFieldConfig campo) {
+  Widget _construirCampo(FormFieldConfig campo, int numeroSecuencial) {
     switch (campo.tipo) {
       case FieldType.dropdown:
         return PreguntaContainer(
           campo: campo,
+          numeroSecuencial: numeroSecuencial,
           child: CampoDropdown(
             opciones: campo.opciones,
             valor: _respuestas[campo.id] as String?,
@@ -234,6 +250,7 @@ class _DynamicFormScreenState extends State<DynamicFormScreen> {
       case FieldType.singleChoice:
         return PreguntaContainer(
           campo: campo,
+          numeroSecuencial: numeroSecuencial,
           child: CampoOpcionUnica(
             opciones: campo.opciones,
             valor: _respuestas[campo.id] as String?,
@@ -250,6 +267,7 @@ class _DynamicFormScreenState extends State<DynamicFormScreen> {
       case FieldType.multiChoice:
         return PreguntaContainer(
           campo: campo,
+          numeroSecuencial: numeroSecuencial,
           child: CampoOpcionMultiple(
             opciones: campo.opciones,
             valores: (_respuestas[campo.id] as Set<String>?) ?? <String>{},
@@ -266,6 +284,7 @@ class _DynamicFormScreenState extends State<DynamicFormScreen> {
       case FieldType.monthMultiSelect:
         return PreguntaContainer(
           campo: campo,
+          numeroSecuencial: numeroSecuencial,
           child: CampoMesesMultiple(
             meses: mesesDelAno,
             valores: (_respuestas[campo.id] as Set<String>?) ?? <String>{},
@@ -276,6 +295,7 @@ class _DynamicFormScreenState extends State<DynamicFormScreen> {
       case FieldType.matrixSingle:
         return PreguntaContainer(
           campo: campo,
+          numeroSecuencial: numeroSecuencial,
           child: CampoMatrizLikert(
             filas: campo.filas,
             columnas: campo.columnas,
@@ -289,6 +309,7 @@ class _DynamicFormScreenState extends State<DynamicFormScreen> {
         final controller = _controladorPara(campo.id);
         return PreguntaContainer(
           campo: campo,
+          numeroSecuencial: numeroSecuencial,
           child: CampoTexto(
             controller: controller,
             hintText: campo.placeholder,
@@ -299,6 +320,7 @@ class _DynamicFormScreenState extends State<DynamicFormScreen> {
         final controller = _controladorPara(campo.id);
         return PreguntaContainer(
           campo: campo,
+          numeroSecuencial: numeroSecuencial,
           child: CampoTexto(
             controller: controller,
             tipoTeclado: TextInputType.number,
@@ -310,6 +332,7 @@ class _DynamicFormScreenState extends State<DynamicFormScreen> {
         final controller = _controladorPara(campo.id);
         return PreguntaContainer(
           campo: campo,
+          numeroSecuencial: numeroSecuencial,
           child: CampoTexto(
             controller: controller,
             maxLineas: 4,

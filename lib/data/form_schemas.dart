@@ -345,7 +345,7 @@ const _qProblemaUrgente = FormFieldConfig(
 const formularioEjecutivo = FormSchema(
   id: 'ejecutivo',
   titulo: 'Formulario Ejecutivo',
-  descripcionCorta: 'Versión corta del diagnóstico (36 preguntas)',
+  descripcionCorta: 'Versión corta del diagnóstico',
   secciones: [
     FormSectionConfig(
       titulo: 'Datos Generales e Identificación',
@@ -423,7 +423,7 @@ const formularioEjecutivo = FormSchema(
 const formularioAmpliado = FormSchema(
   id: 'ampliado',
   titulo: 'Formulario Ampliado',
-  descripcionCorta: 'Versión completa del diagnóstico (39 preguntas)',
+  descripcionCorta: 'Versión completa del diagnóstico',
   secciones: [
     FormSectionConfig(
       titulo: 'Datos Generales e Identificación',

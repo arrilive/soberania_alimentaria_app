@@ -197,8 +197,7 @@ class _DynamicFormScreenState extends State<DynamicFormScreen> {
               itemCount: campos.length,
               itemBuilder: (context, index) {
                 final campo = campos[index];
-                final numSecuencial =
-                    indicesSecuenciales[campo.id] ?? 0;
+                final numSecuencial = indicesSecuenciales[campo.id] ?? 0;
                 return _construirCampo(campo, numSecuencial);
               },
             ),

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../data/catalogos.dart';
 import '../data/respuestas_repository.dart';
@@ -8,30 +9,72 @@ import '../widgets/form_field_widgets.dart';
 class DynamicFormScreen extends StatefulWidget {
   final FormSchema schema;
   final Color colorAcento;
+  final String? idLocalExistente;
+  final Map<String, dynamic>? respuestasIniciales;
+  final Map<String, String>? otrosIniciales;
+  final int? seccionInicial;
 
-  const DynamicFormScreen(
-      {super.key, required this.schema, required this.colorAcento});
+  const DynamicFormScreen({
+    super.key,
+    required this.schema,
+    required this.colorAcento,
+    this.idLocalExistente,
+    this.respuestasIniciales,
+    this.otrosIniciales,
+    this.seccionInicial,
+  });
 
   @override
   State<DynamicFormScreen> createState() => _DynamicFormScreenState();
 }
 
-class _DynamicFormScreenState extends State<DynamicFormScreen> {
+class _DynamicFormScreenState extends State<DynamicFormScreen>
+    with WidgetsBindingObserver {
   int _seccionActual = 0;
+  late final String _idLocal;
 
   // Respuestas: String? para dropdown/singleChoice, Set<String> para
   // multiChoice/monthMultiSelect, Map<String,String> para matrixSingle.
-  final Map<String, dynamic> _respuestas = {};
+  late final Map<String, dynamic> _respuestas;
 
   // Texto libre de las opciones "Otros" / disparadores condicionales.
-  final Map<String, String> _otros = {};
+  late final Map<String, String> _otros;
+
+  String _lastSavedHash = '';
 
   // Controladores de texto para campos de texto/número/texto largo/otros.
   final Map<String, TextEditingController> _controladores = {};
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+
+    final initialSeccion = widget.seccionInicial ?? 0;
+    if (initialSeccion >= 0 &&
+        initialSeccion < widget.schema.secciones.length) {
+      _seccionActual = initialSeccion;
+    } else {
+      _seccionActual = 0;
+    }
+
+    _idLocal = widget.idLocalExistente ??
+        RespuestasRepository.instancia.generarIdLocal();
+    _respuestas = widget.respuestasIniciales != null
+        ? Map<String, dynamic>.from(widget.respuestasIniciales!)
+        : {};
+    _otros = widget.otrosIniciales != null
+        ? Map<String, String>.from(widget.otrosIniciales!)
+        : {};
+
+    _lastSavedHash = _calcularHash();
+  }
+
   TextEditingController _controladorPara(String id) {
     return _controladores.putIfAbsent(id, () {
-      final controller = TextEditingController();
+      final initialText =
+          _respuestas[id] is String ? (_respuestas[id] as String) : '';
+      final controller = TextEditingController(text: initialText);
       controller.addListener(() => _respuestas[id] = controller.text);
       return controller;
     });
@@ -39,10 +82,50 @@ class _DynamicFormScreenState extends State<DynamicFormScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     for (final c in _controladores.values) {
       c.dispose();
     }
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive) {
+      _guardarBorradorSiCambio();
+    }
+  }
+
+  String _calcularHash() {
+    final Map<String, dynamic> serializableRespuestas = {};
+    _respuestas.forEach((k, v) {
+      if (v is Set) {
+        final list = v.toList()..sort();
+        serializableRespuestas[k] = list;
+      } else {
+        serializableRespuestas[k] = v;
+      }
+    });
+    return jsonEncode({
+      'seccionActual': _seccionActual,
+      'respuestas': serializableRespuestas,
+      'otros': _otros,
+    });
+  }
+
+  Future<void> _guardarBorradorSiCambio() async {
+    final currentHash = _calcularHash();
+    if (currentHash != _lastSavedHash) {
+      _lastSavedHash = currentHash;
+      await RespuestasRepository.instancia.guardarBorrador(
+        idLocal: _idLocal,
+        schema: widget.schema,
+        respuestas: _respuestas,
+        otros: _otros,
+        seccionActual: _seccionActual,
+      );
+    }
   }
 
   bool _campoVisible(FormFieldConfig campo) {
@@ -78,8 +161,9 @@ class _DynamicFormScreenState extends State<DynamicFormScreen> {
     return true;
   }
 
-  void _siguiente() {
+  void _siguiente() async {
     if (!_validarSeccionActual()) return;
+    await _guardarBorradorSiCambio();
     final esUltima = _seccionActual == widget.schema.secciones.length - 1;
     if (esUltima) {
       _mostrarConfirmacionGuardado();
@@ -88,9 +172,10 @@ class _DynamicFormScreenState extends State<DynamicFormScreen> {
     }
   }
 
-  void _anterior() {
+  void _anterior() async {
+    await _guardarBorradorSiCambio();
     if (_seccionActual == 0) {
-      Navigator.of(context).pop();
+      if (mounted) Navigator.of(context).pop();
     } else {
       setState(() => _seccionActual--);
     }
@@ -121,11 +206,15 @@ class _DynamicFormScreenState extends State<DynamicFormScreen> {
             onPressed: () async {
               final navigator = Navigator.of(context);
               final messenger = ScaffoldMessenger.of(context);
-              await RespuestasRepository.instancia.guardarRespuesta(
+              await RespuestasRepository.instancia.guardarBorrador(
+                idLocal: _idLocal,
                 schema: widget.schema,
                 respuestas: _respuestas,
                 otros: _otros,
+                seccionActual: _seccionActual,
               );
+              await RespuestasRepository.instancia.finalizarRespuesta(_idLocal);
+
               if (!mounted) return;
               navigator.pop(); // cierra el diálogo
               navigator.pop(); // regresa a Home

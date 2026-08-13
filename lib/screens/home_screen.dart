@@ -99,15 +99,6 @@ class HomeScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Soberanía Alimentaria'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.bug_report_outlined),
-            tooltip: 'Debug (Respuestas Guardadas)',
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const DebugRespuestasScreen()),
-            ),
-          ),
-        ],
       ),
       body: SafeArea(
         child: ListView(
@@ -145,23 +136,23 @@ class HomeScreen extends StatelessWidget {
               onTap: () => _abrirFormulario(
                   context, formularioAmpliado, AppColors.guinda),
             ),
+            const SizedBox(height: 16),
+            _TarjetaFormulario(
+              titulo: 'Diagnósticos guardados',
+              descripcion: 'Revisa las encuestas guardadas en este dispositivo',
+              icono: Icons.inventory_2_outlined,
+              color: AppColors.doradoInstitucional,
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                    builder: (_) => const DebugRespuestasScreen()),
+              ),
+            ),
             const SizedBox(height: 24),
             Text(
               'Los diagnósticos guardados en este dispositivo se pueden '
               'sincronizar más adelante cuando haya conexión a internet.',
               style: Theme.of(context).textTheme.bodyMedium,
               textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            Center(
-              child: TextButton.icon(
-                onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                      builder: (_) => const DebugRespuestasScreen()),
-                ),
-                icon: const Icon(Icons.bug_report, size: 18),
-                label: const Text('Ver diagnósticos guardados (Debug)'),
-              ),
             ),
           ],
         ),

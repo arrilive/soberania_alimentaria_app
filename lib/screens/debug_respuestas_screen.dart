@@ -29,11 +29,35 @@ class _DebugRespuestasScreenState extends State<DebugRespuestasScreen> {
     });
   }
 
+  (Color, Color, String) _estiloEstado(String status) {
+    switch (status.toLowerCase()) {
+      case 'borrador':
+        return (
+          AppColors.textoSecundario,
+          AppColors.textoSecundario.withValues(alpha: 0.12),
+          'Estado: Borrador',
+        );
+      case 'enviado':
+        return (
+          AppColors.exito,
+          AppColors.exito.withValues(alpha: 0.15),
+          'Estado: Enviado',
+        );
+      case 'pendiente':
+      default:
+        return (
+          const Color(0xFF8C6D3B),
+          AppColors.doradoInstitucional.withValues(alpha: 0.18),
+          'Estado: Pendiente',
+        );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Depuración Offline (Debug)'),
+        title: const Text('Diagnósticos guardados'),
         backgroundColor: AppColors.guinda,
         actions: [
           IconButton(
@@ -46,15 +70,19 @@ class _DebugRespuestasScreenState extends State<DebugRespuestasScreen> {
         children: [
           Container(
             width: double.infinity,
-            color: AppColors.guinda.withValues(alpha: 0.1),
+            color: AppColors.guinda.withValues(alpha: 0.08),
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
                 const Text(
-                  'Almacenamiento Local (SQLite via Drift)',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  'Estos diagnósticos están guardados en tu dispositivo, listos para enviar cuando haya conexión a internet.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: AppColors.textoPrincipal,
+                  ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 6),
                 Text(
                   'Registros pendientes de envío: $_pendientes',
                   style: const TextStyle(
@@ -98,6 +126,7 @@ class _DebugRespuestasScreenState extends State<DebugRespuestasScreen> {
                     final item = lista[index];
                     final fechaStr =
                         item.fechaCapturaLocal.toString().split('.').first;
+                    final estilo = _estiloEstado(item.syncStatus);
 
                     return Card(
                       child: Padding(
@@ -123,16 +152,15 @@ class _DebugRespuestasScreenState extends State<DebugRespuestasScreen> {
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 8, vertical: 4),
                                   decoration: BoxDecoration(
-                                    color:
-                                        Colors.orange.withValues(alpha: 0.15),
+                                    color: estilo.$2,
                                     borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: Text(
-                                    'Estado: ${item.syncStatus}',
-                                    style: const TextStyle(
+                                    estilo.$3,
+                                    style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600,
-                                      color: Colors.deepOrange,
+                                      color: estilo.$1,
                                     ),
                                   ),
                                 ),

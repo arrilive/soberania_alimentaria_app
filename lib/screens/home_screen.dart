@@ -113,6 +113,8 @@ class HomeScreen extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
+            const _HeaderLogosInstitucionales(),
+            const SizedBox(height: 20),
             Text(
               'Diagnóstico de Cadena de Valor Agroecológica',
               style: Theme.of(context).textTheme.headlineSmall,
@@ -219,6 +221,68 @@ class _TarjetaFormulario extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _HeaderLogosInstitucionales extends StatelessWidget {
+  const _HeaderLogosInstitucionales();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+      decoration: BoxDecoration(
+        color: AppColors.guinda.withValues(alpha: 0.04),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppColors.borde.withValues(alpha: 0.5),
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          Expanded(
+            child: SizedBox(
+              height: 48,
+              child: Image.asset(
+                'assets/logos/logo_secihti.png',
+                fit: BoxFit.contain,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: SizedBox(
+              height: 48,
+              child: Image.asset(
+                'assets/logos/GEO_V_H.png',
+                fit: BoxFit.contain,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: SizedBox(
+              height: 48,
+              child: Image.asset(
+                'assets/logos/logo_itm.png',
+                fit: BoxFit.contain,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: SizedBox(
+              height: 48,
+              child: Image.asset(
+                'assets/logos/GEOINT_V_H.png',
+                fit: BoxFit.contain,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

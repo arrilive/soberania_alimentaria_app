@@ -703,7 +703,6 @@ const formularioAmpliado = FormSchema(
           permiteOtro: true,
           otroLabel: 'Otras:',
           otroOpcionTexto: 'Otras',
-          ayuda: 'Seleccione todas las que apliquen',
         ),
         FormFieldConfig(
           id: 'p39_actividades_red',

@@ -29,6 +29,22 @@ class DynamicFormScreen extends StatefulWidget {
   State<DynamicFormScreen> createState() => _DynamicFormScreenState();
 }
 
+class _PreguntaFaltanteInfo {
+  final int numSecuencial;
+  final int seccionIndex;
+  final String pregunta;
+  final int? filasRespondidas;
+  final int? totalFilas;
+
+  const _PreguntaFaltanteInfo({
+    required this.numSecuencial,
+    required this.seccionIndex,
+    required this.pregunta,
+    this.filasRespondidas,
+    this.totalFilas,
+  });
+}
+
 class _DynamicFormScreenState extends State<DynamicFormScreen>
     with WidgetsBindingObserver {
   int _seccionActual = 0;
@@ -154,7 +170,12 @@ class _DynamicFormScreenState extends State<DynamicFormScreen>
     if (valor == null) return false;
     if (valor is String) return valor.trim().isNotEmpty;
     if (valor is Set) return valor.isNotEmpty;
-    if (valor is Map) return valor.isNotEmpty;
+    if (valor is Map) {
+      if (campo.tipo == FieldType.matrixSingle) {
+        return valor.length == campo.filas.length;
+      }
+      return valor.isNotEmpty;
+    }
     return true;
   }
 
@@ -186,7 +207,7 @@ class _DynamicFormScreenState extends State<DynamicFormScreen>
     }
   }
 
-  void _anterior() async {
+  Future<void> _anterior() async {
     await _guardarBorradorSiCambio();
     if (_seccionActual == 0) {
       if (mounted) Navigator.of(context).pop();
@@ -196,24 +217,124 @@ class _DynamicFormScreenState extends State<DynamicFormScreen>
   }
 
   void _mostrarConfirmacionGuardado() {
-    final totalPreguntas = widget.schema.totalPreguntas;
-    final totalRespondidas = widget.schema.secciones
-        .expand((s) => s.campos)
-        .where(_campoRespondido)
-        .length;
+    final Map<String, int> indicesSecuenciales = {};
+    int contadorSecuencial = 1;
+    final List<_PreguntaFaltanteInfo> preguntasFaltantes = [];
+
+    for (int sIdx = 0; sIdx < widget.schema.secciones.length; sIdx++) {
+      final s = widget.schema.secciones[sIdx];
+      for (final c in s.campos) {
+        if (_campoVisible(c)) {
+          final numSecuencial = contadorSecuencial++;
+          indicesSecuenciales[c.id] = numSecuencial;
+          if (!_campoRespondido(c)) {
+            int? respondidas;
+            int? total;
+            if (c.tipo == FieldType.matrixSingle) {
+              final valor = _respuestas[c.id];
+              if (valor is Map && valor.isNotEmpty) {
+                respondidas = valor.length;
+                total = c.filas.length;
+              }
+            }
+            preguntasFaltantes.add(
+              _PreguntaFaltanteInfo(
+                numSecuencial: numSecuencial,
+                seccionIndex: sIdx,
+                pregunta: c.pregunta,
+                filasRespondidas: respondidas,
+                totalFilas: total,
+              ),
+            );
+          }
+        }
+      }
+    }
+
+    final totalPreguntas = indicesSecuenciales.length;
+    final totalRespondidas = totalPreguntas - preguntasFaltantes.length;
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Revisar antes de guardar'),
-        content: Text(
-          'Respondiste $totalRespondidas de $totalPreguntas preguntas.\n\n'
-          'Este diagnóstico se guardará únicamente en este teléfono. '
-          'No se envía a internet en este momento.',
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Respondiste $totalRespondidas de $totalPreguntas preguntas.\n\n'
+                'Tus respuestas se han estado guardando automáticamente en este dispositivo. '
+                'Al confirmar, este diagnóstico quedará marcado como completo.',
+              ),
+              if (preguntasFaltantes.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                Theme(
+                  data: Theme.of(dialogContext)
+                      .copyWith(dividerColor: Colors.transparent),
+                  child: ExpansionTile(
+                    initiallyExpanded: false,
+                    tilePadding: EdgeInsets.zero,
+                    childrenPadding: const EdgeInsets.only(top: 4, bottom: 8),
+                    title: Text(
+                      'Ver ${preguntasFaltantes.length} preguntas opcionales sin responder',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.guinda,
+                      ),
+                    ),
+                    children: preguntasFaltantes.map((f) {
+                      final textoBase = f.pregunta.length > 50
+                          ? '${f.pregunta.substring(0, 50)}...'
+                          : f.pregunta;
+                      final infoFilas = (f.filasRespondidas != null &&
+                              f.totalFilas != null)
+                          ? ' (${f.filasRespondidas} de ${f.totalFilas} filas respondidas)'
+                          : '';
+                      final textoFinal = '$textoBase$infoFilas';
+
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 3.0),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${f.numSecuencial}. ',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            ),
+                            Expanded(
+                              child: Text(
+                                textoFinal,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: AppColors.textoSecundario,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ],
+            ],
+          ),
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () {
+              Navigator.of(dialogContext).pop();
+              if (preguntasFaltantes.isNotEmpty) {
+                setState(() =>
+                    _seccionActual = preguntasFaltantes.first.seccionIndex);
+              }
+            },
             child: const Text('Seguir editando'),
           ),
           ElevatedButton(
@@ -269,115 +390,125 @@ class _DynamicFormScreenState extends State<DynamicFormScreen>
     final campos = _camposVisiblesDe(seccion);
     final esUltima = _seccionActual == widget.schema.secciones.length - 1;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.schema.titulo),
-        backgroundColor: widget.colorAcento,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: AnimatedOpacity(
-              opacity: _mostrarIconoGuardado ? 1.0 : 0.0,
-              duration: const Duration(milliseconds: 200),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.check_circle_outline,
-                      size: 16, color: Colors.white),
-                  SizedBox(width: 4),
-                  Text(
-                    'Guardado',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.white,
-                      fontWeight: FontWeight.w500,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        final navigator = Navigator.of(context);
+        await _guardarBorradorSiCambio();
+        if (mounted) navigator.pop();
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(widget.schema.titulo),
+          backgroundColor: widget.colorAcento,
+          actions: [
+            Padding(
+              padding: const EdgeInsets.only(right: 16.0),
+              child: AnimatedOpacity(
+                opacity: _mostrarIconoGuardado ? 1.0 : 0.0,
+                duration: const Duration(milliseconds: 200),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.check_circle_outline,
+                        size: 16, color: Colors.white),
+                    SizedBox(width: 4),
+                    Text(
+                      'Guardado',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(widget.schema.secciones.length, (i) {
-                final esActual = i == _seccionActual;
-                final completada = i <= _seccionActual;
-                return AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  curve: Curves.easeInOut,
-                  margin: const EdgeInsets.symmetric(horizontal: 3),
-                  width: esActual ? 10 : 8,
-                  height: esActual ? 10 : 8,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: completada ? widget.colorAcento : AppColors.borde,
-                  ),
-                );
-              }),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-            child: Text(
-              seccion.titulo,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-          ),
-          Expanded(
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 180),
-              transitionBuilder: (child, animation) {
-                return FadeTransition(
-                  opacity: animation,
-                  child: child,
-                );
-              },
-              child: ListView.builder(
-                key: ValueKey(_seccionActual),
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemCount: campos.length,
-                itemBuilder: (context, index) {
-                  final campo = campos[index];
-                  final numSecuencial = indicesSecuenciales[campo.id] ?? 0;
-                  return _construirCampo(campo, numSecuencial);
-                },
-              ),
-            ),
-          ),
-          SafeArea(
-            top: false,
-            child: Padding(
-              padding: const EdgeInsets.all(16),
+          ],
+        ),
+        body: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
               child: Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: _anterior,
-                      child: Text(_seccionActual == 0 ? 'Cancelar' : 'Atrás'),
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(widget.schema.secciones.length, (i) {
+                  final esActual = i == _seccionActual;
+                  final completada = i <= _seccionActual;
+                  return AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    curve: Curves.easeInOut,
+                    margin: const EdgeInsets.symmetric(horizontal: 3),
+                    width: esActual ? 10 : 8,
+                    height: esActual ? 10 : 8,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: completada ? widget.colorAcento : AppColors.borde,
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    flex: 2,
-                    child: ElevatedButton(
-                      onPressed: _siguiente,
-                      style: ElevatedButton.styleFrom(
-                          backgroundColor: widget.colorAcento),
-                      child: Text(esUltima ? 'Revisar y guardar' : 'Siguiente'),
-                    ),
-                  ),
-                ],
+                  );
+                }),
               ),
             ),
-          ),
-        ],
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: Text(
+                seccion.titulo,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+            ),
+            Expanded(
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 180),
+                transitionBuilder: (child, animation) {
+                  return FadeTransition(
+                    opacity: animation,
+                    child: child,
+                  );
+                },
+                child: ListView.builder(
+                  key: ValueKey(_seccionActual),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: campos.length,
+                  itemBuilder: (context, index) {
+                    final campo = campos[index];
+                    final numSecuencial = indicesSecuenciales[campo.id] ?? 0;
+                    return _construirCampo(campo, numSecuencial);
+                  },
+                ),
+              ),
+            ),
+            SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: _anterior,
+                        child: Text(_seccionActual == 0 ? 'Cancelar' : 'Atrás'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      flex: 2,
+                      child: ElevatedButton(
+                        onPressed: _siguiente,
+                        style: ElevatedButton.styleFrom(
+                            backgroundColor: widget.colorAcento),
+                        child:
+                            Text(esUltima ? 'Revisar y guardar' : 'Siguiente'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

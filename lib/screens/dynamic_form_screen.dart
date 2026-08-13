@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../data/catalogos.dart';
@@ -41,6 +42,8 @@ class _DynamicFormScreenState extends State<DynamicFormScreen>
   late final Map<String, String> _otros;
 
   String _lastSavedHash = '';
+  bool _mostrarIconoGuardado = false;
+  Timer? _timerIconoGuardado;
 
   // Controladores de texto para campos de texto/número/texto largo/otros.
   final Map<String, TextEditingController> _controladores = {};
@@ -82,6 +85,7 @@ class _DynamicFormScreenState extends State<DynamicFormScreen>
 
   @override
   void dispose() {
+    _timerIconoGuardado?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     for (final c in _controladores.values) {
       c.dispose();
@@ -125,6 +129,16 @@ class _DynamicFormScreenState extends State<DynamicFormScreen>
         otros: _otros,
         seccionActual: _seccionActual,
       );
+
+      _timerIconoGuardado?.cancel();
+      if (mounted) {
+        setState(() => _mostrarIconoGuardado = true);
+      }
+      _timerIconoGuardado = Timer(const Duration(milliseconds: 1500), () {
+        if (mounted) {
+          setState(() => _mostrarIconoGuardado = false);
+        }
+      });
     }
   }
 
@@ -259,6 +273,31 @@ class _DynamicFormScreenState extends State<DynamicFormScreen>
       appBar: AppBar(
         title: Text(widget.schema.titulo),
         backgroundColor: widget.colorAcento,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: AnimatedOpacity(
+              opacity: _mostrarIconoGuardado ? 1.0 : 0.0,
+              duration: const Duration(milliseconds: 200),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.check_circle_outline,
+                      size: 16, color: Colors.white),
+                  SizedBox(width: 4),
+                  Text(
+                    'Guardado',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -267,11 +306,14 @@ class _DynamicFormScreenState extends State<DynamicFormScreen>
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(widget.schema.secciones.length, (i) {
+                final esActual = i == _seccionActual;
                 final completada = i <= _seccionActual;
-                return Container(
+                return AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeInOut,
                   margin: const EdgeInsets.symmetric(horizontal: 3),
-                  width: 8,
-                  height: 8,
+                  width: esActual ? 10 : 8,
+                  height: esActual ? 10 : 8,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: completada ? widget.colorAcento : AppColors.borde,
@@ -289,15 +331,24 @@ class _DynamicFormScreenState extends State<DynamicFormScreen>
             ),
           ),
           Expanded(
-            child: ListView.builder(
-              key: ValueKey(_seccionActual),
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: campos.length,
-              itemBuilder: (context, index) {
-                final campo = campos[index];
-                final numSecuencial = indicesSecuenciales[campo.id] ?? 0;
-                return _construirCampo(campo, numSecuencial);
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 180),
+              transitionBuilder: (child, animation) {
+                return FadeTransition(
+                  opacity: animation,
+                  child: child,
+                );
               },
+              child: ListView.builder(
+                key: ValueKey(_seccionActual),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: campos.length,
+                itemBuilder: (context, index) {
+                  final campo = campos[index];
+                  final numSecuencial = indicesSecuenciales[campo.id] ?? 0;
+                  return _construirCampo(campo, numSecuencial);
+                },
+              ),
             ),
           ),
           SafeArea(

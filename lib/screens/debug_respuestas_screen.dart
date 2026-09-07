@@ -171,6 +171,11 @@ class _DebugRespuestasScreenState extends State<DebugRespuestasScreen> {
                                 style: const TextStyle(
                                     fontSize: 12, fontFamily: 'monospace')),
                             Text(
+                              'Folio: ${item.folio ?? "(pendiente de generar)"}',
+                              style: const TextStyle(
+                                  fontSize: 12, fontFamily: 'monospace'),
+                            ),
+                            Text(
                                 'Nombre: ${item.p4Nombre ?? "(No especificado)"}'),
                             Text(
                                 'Comunidad: ${item.p1ComunidadVive ?? "(No especificada)"}'),
@@ -179,6 +184,14 @@ class _DebugRespuestasScreenState extends State<DebugRespuestasScreen> {
                             const SizedBox(height: 6),
                             Text(
                               'Fecha de captura: $fechaStr',
+                              style: const TextStyle(
+                                  fontSize: 12,
+                                  color: AppColors.textoSecundario),
+                            ),
+                            Text(
+                              item.latitud != null && item.longitud != null
+                                  ? 'GPS: ${item.latitud!.toStringAsFixed(5)}, ${item.longitud!.toStringAsFixed(5)}'
+                                  : 'GPS: (sin capturar)',
                               style: const TextStyle(
                                   fontSize: 12,
                                   color: AppColors.textoSecundario),

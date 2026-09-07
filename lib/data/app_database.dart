@@ -12,6 +12,8 @@ part 'app_database.g.dart';
 class RespuestasDiagnostico extends Table {
   // --- COLUMNAS DE CONTROL LOCAL (Solo para uso offline en la app) ---
   TextColumn get idLocal => text()(); // UUID local
+  // Identificador único de 8 caracteres para sincronización con el servidor central (evita duplicados). Se genera una sola vez al crear el borrador, ver folio_generator.dart.
+  TextColumn get folio => text().nullable()();
   // Valores válidos para syncStatus:
   // - 'borrador': encuesta en progreso, sin terminar (autoguardado local)
   // - 'pendiente': completada, lista para sincronización a servidor
@@ -143,7 +145,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _abrirConexion());
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   // NOTA IMPORTANTE DE MIGRACIÓN:
   // CADA cambio futuro de columna en la base de datos (por ejemplo en Fase 2:
@@ -155,6 +157,10 @@ class AppDatabase extends _$AppDatabase {
           if (from < 2) {
             await m.addColumn(
                 respuestasDiagnostico, respuestasDiagnostico.borradorJson);
+          }
+          if (from < 3) {
+            await m.addColumn(
+                respuestasDiagnostico, respuestasDiagnostico.folio);
           }
         },
       );

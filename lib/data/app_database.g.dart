@@ -15,6 +15,11 @@ class $RespuestasDiagnosticoTable extends RespuestasDiagnostico
   late final GeneratedColumn<String> idLocal = GeneratedColumn<String>(
       'id_local', aliasedName, false,
       type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _folioMeta = const VerificationMeta('folio');
+  @override
+  late final GeneratedColumn<String> folio = GeneratedColumn<String>(
+      'folio', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
   static const VerificationMeta _syncStatusMeta =
       const VerificationMeta('syncStatus');
   @override
@@ -597,6 +602,7 @@ class $RespuestasDiagnosticoTable extends RespuestasDiagnostico
   @override
   List<GeneratedColumn> get $columns => [
         idLocal,
+        folio,
         syncStatus,
         fechaCapturaLocal,
         borradorJson,
@@ -710,6 +716,10 @@ class $RespuestasDiagnosticoTable extends RespuestasDiagnostico
           idLocal.isAcceptableOrUnknown(data['id_local']!, _idLocalMeta));
     } else if (isInserting) {
       context.missing(_idLocalMeta);
+    }
+    if (data.containsKey('folio')) {
+      context.handle(
+          _folioMeta, folio.isAcceptableOrUnknown(data['folio']!, _folioMeta));
     }
     if (data.containsKey('sync_status')) {
       context.handle(
@@ -1289,6 +1299,8 @@ class $RespuestasDiagnosticoTable extends RespuestasDiagnostico
     return RespuestasDiagnosticoData(
       idLocal: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}id_local'])!,
+      folio: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}folio']),
       syncStatus: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}sync_status'])!,
       fechaCapturaLocal: attachedDatabase.typeMapping.read(
@@ -1514,6 +1526,7 @@ class $RespuestasDiagnosticoTable extends RespuestasDiagnostico
 class RespuestasDiagnosticoData extends DataClass
     implements Insertable<RespuestasDiagnosticoData> {
   final String idLocal;
+  final String? folio;
   final String syncStatus;
   final DateTime fechaCapturaLocal;
   final String? borradorJson;
@@ -1612,6 +1625,7 @@ class RespuestasDiagnosticoData extends DataClass
   final double? longitud;
   const RespuestasDiagnosticoData(
       {required this.idLocal,
+      this.folio,
       required this.syncStatus,
       required this.fechaCapturaLocal,
       this.borradorJson,
@@ -1712,6 +1726,9 @@ class RespuestasDiagnosticoData extends DataClass
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id_local'] = Variable<String>(idLocal);
+    if (!nullToAbsent || folio != null) {
+      map['folio'] = Variable<String>(folio);
+    }
     map['sync_status'] = Variable<String>(syncStatus);
     map['fecha_captura_local'] = Variable<DateTime>(fechaCapturaLocal);
     if (!nullToAbsent || borradorJson != null) {
@@ -2012,6 +2029,8 @@ class RespuestasDiagnosticoData extends DataClass
   RespuestasDiagnosticoCompanion toCompanion(bool nullToAbsent) {
     return RespuestasDiagnosticoCompanion(
       idLocal: Value(idLocal),
+      folio:
+          folio == null && nullToAbsent ? const Value.absent() : Value(folio),
       syncStatus: Value(syncStatus),
       fechaCapturaLocal: Value(fechaCapturaLocal),
       borradorJson: borradorJson == null && nullToAbsent
@@ -2306,6 +2325,7 @@ class RespuestasDiagnosticoData extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return RespuestasDiagnosticoData(
       idLocal: serializer.fromJson<String>(json['idLocal']),
+      folio: serializer.fromJson<String?>(json['folio']),
       syncStatus: serializer.fromJson<String>(json['syncStatus']),
       fechaCapturaLocal:
           serializer.fromJson<DateTime>(json['fechaCapturaLocal']),
@@ -2444,6 +2464,7 @@ class RespuestasDiagnosticoData extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'idLocal': serializer.toJson<String>(idLocal),
+      'folio': serializer.toJson<String?>(folio),
       'syncStatus': serializer.toJson<String>(syncStatus),
       'fechaCapturaLocal': serializer.toJson<DateTime>(fechaCapturaLocal),
       'borradorJson': serializer.toJson<String?>(borradorJson),
@@ -2559,6 +2580,7 @@ class RespuestasDiagnosticoData extends DataClass
 
   RespuestasDiagnosticoData copyWith(
           {String? idLocal,
+          Value<String?> folio = const Value.absent(),
           String? syncStatus,
           DateTime? fechaCapturaLocal,
           Value<String?> borradorJson = const Value.absent(),
@@ -2657,6 +2679,7 @@ class RespuestasDiagnosticoData extends DataClass
           Value<double?> longitud = const Value.absent()}) =>
       RespuestasDiagnosticoData(
         idLocal: idLocal ?? this.idLocal,
+        folio: folio.present ? folio.value : this.folio,
         syncStatus: syncStatus ?? this.syncStatus,
         fechaCapturaLocal: fechaCapturaLocal ?? this.fechaCapturaLocal,
         borradorJson:
@@ -2884,6 +2907,7 @@ class RespuestasDiagnosticoData extends DataClass
       RespuestasDiagnosticoCompanion data) {
     return RespuestasDiagnosticoData(
       idLocal: data.idLocal.present ? data.idLocal.value : this.idLocal,
+      folio: data.folio.present ? data.folio.value : this.folio,
       syncStatus:
           data.syncStatus.present ? data.syncStatus.value : this.syncStatus,
       fechaCapturaLocal: data.fechaCapturaLocal.present
@@ -3151,6 +3175,7 @@ class RespuestasDiagnosticoData extends DataClass
   String toString() {
     return (StringBuffer('RespuestasDiagnosticoData(')
           ..write('idLocal: $idLocal, ')
+          ..write('folio: $folio, ')
           ..write('syncStatus: $syncStatus, ')
           ..write('fechaCapturaLocal: $fechaCapturaLocal, ')
           ..write('borradorJson: $borradorJson, ')
@@ -3254,6 +3279,7 @@ class RespuestasDiagnosticoData extends DataClass
   @override
   int get hashCode => Object.hashAll([
         idLocal,
+        folio,
         syncStatus,
         fechaCapturaLocal,
         borradorJson,
@@ -3356,6 +3382,7 @@ class RespuestasDiagnosticoData extends DataClass
       identical(this, other) ||
       (other is RespuestasDiagnosticoData &&
           other.idLocal == this.idLocal &&
+          other.folio == this.folio &&
           other.syncStatus == this.syncStatus &&
           other.fechaCapturaLocal == this.fechaCapturaLocal &&
           other.borradorJson == this.borradorJson &&
@@ -3458,6 +3485,7 @@ class RespuestasDiagnosticoData extends DataClass
 class RespuestasDiagnosticoCompanion
     extends UpdateCompanion<RespuestasDiagnosticoData> {
   final Value<String> idLocal;
+  final Value<String?> folio;
   final Value<String> syncStatus;
   final Value<DateTime> fechaCapturaLocal;
   final Value<String?> borradorJson;
@@ -3557,6 +3585,7 @@ class RespuestasDiagnosticoCompanion
   final Value<int> rowid;
   const RespuestasDiagnosticoCompanion({
     this.idLocal = const Value.absent(),
+    this.folio = const Value.absent(),
     this.syncStatus = const Value.absent(),
     this.fechaCapturaLocal = const Value.absent(),
     this.borradorJson = const Value.absent(),
@@ -3657,6 +3686,7 @@ class RespuestasDiagnosticoCompanion
   });
   RespuestasDiagnosticoCompanion.insert({
     required String idLocal,
+    this.folio = const Value.absent(),
     this.syncStatus = const Value.absent(),
     required DateTime fechaCapturaLocal,
     this.borradorJson = const Value.absent(),
@@ -3758,6 +3788,7 @@ class RespuestasDiagnosticoCompanion
         fechaCapturaLocal = Value(fechaCapturaLocal);
   static Insertable<RespuestasDiagnosticoData> custom({
     Expression<String>? idLocal,
+    Expression<String>? folio,
     Expression<String>? syncStatus,
     Expression<DateTime>? fechaCapturaLocal,
     Expression<String>? borradorJson,
@@ -3858,6 +3889,7 @@ class RespuestasDiagnosticoCompanion
   }) {
     return RawValuesInsertable({
       if (idLocal != null) 'id_local': idLocal,
+      if (folio != null) 'folio': folio,
       if (syncStatus != null) 'sync_status': syncStatus,
       if (fechaCapturaLocal != null) 'fecha_captura_local': fechaCapturaLocal,
       if (borradorJson != null) 'borrador_json': borradorJson,
@@ -3990,6 +4022,7 @@ class RespuestasDiagnosticoCompanion
 
   RespuestasDiagnosticoCompanion copyWith(
       {Value<String>? idLocal,
+      Value<String?>? folio,
       Value<String>? syncStatus,
       Value<DateTime>? fechaCapturaLocal,
       Value<String?>? borradorJson,
@@ -4089,6 +4122,7 @@ class RespuestasDiagnosticoCompanion
       Value<int>? rowid}) {
     return RespuestasDiagnosticoCompanion(
       idLocal: idLocal ?? this.idLocal,
+      folio: folio ?? this.folio,
       syncStatus: syncStatus ?? this.syncStatus,
       fechaCapturaLocal: fechaCapturaLocal ?? this.fechaCapturaLocal,
       borradorJson: borradorJson ?? this.borradorJson,
@@ -4208,6 +4242,9 @@ class RespuestasDiagnosticoCompanion
     final map = <String, Expression>{};
     if (idLocal.present) {
       map['id_local'] = Variable<String>(idLocal.value);
+    }
+    if (folio.present) {
+      map['folio'] = Variable<String>(folio.value);
     }
     if (syncStatus.present) {
       map['sync_status'] = Variable<String>(syncStatus.value);
@@ -4530,6 +4567,7 @@ class RespuestasDiagnosticoCompanion
   String toString() {
     return (StringBuffer('RespuestasDiagnosticoCompanion(')
           ..write('idLocal: $idLocal, ')
+          ..write('folio: $folio, ')
           ..write('syncStatus: $syncStatus, ')
           ..write('fechaCapturaLocal: $fechaCapturaLocal, ')
           ..write('borradorJson: $borradorJson, ')
@@ -4647,6 +4685,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
 typedef $$RespuestasDiagnosticoTableCreateCompanionBuilder
     = RespuestasDiagnosticoCompanion Function({
   required String idLocal,
+  Value<String?> folio,
   Value<String> syncStatus,
   required DateTime fechaCapturaLocal,
   Value<String?> borradorJson,
@@ -4748,6 +4787,7 @@ typedef $$RespuestasDiagnosticoTableCreateCompanionBuilder
 typedef $$RespuestasDiagnosticoTableUpdateCompanionBuilder
     = RespuestasDiagnosticoCompanion Function({
   Value<String> idLocal,
+  Value<String?> folio,
   Value<String> syncStatus,
   Value<DateTime> fechaCapturaLocal,
   Value<String?> borradorJson,
@@ -4858,6 +4898,9 @@ class $$RespuestasDiagnosticoTableFilterComposer
   });
   ColumnFilters<String> get idLocal => $composableBuilder(
       column: $table.idLocal, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get folio => $composableBuilder(
+      column: $table.folio, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get syncStatus => $composableBuilder(
       column: $table.syncStatus, builder: (column) => ColumnFilters(column));
@@ -5220,6 +5263,9 @@ class $$RespuestasDiagnosticoTableOrderingComposer
   });
   ColumnOrderings<String> get idLocal => $composableBuilder(
       column: $table.idLocal, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get folio => $composableBuilder(
+      column: $table.folio, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get syncStatus => $composableBuilder(
       column: $table.syncStatus, builder: (column) => ColumnOrderings(column));
@@ -5599,6 +5645,9 @@ class $$RespuestasDiagnosticoTableAnnotationComposer
   GeneratedColumn<String> get idLocal =>
       $composableBuilder(column: $table.idLocal, builder: (column) => column);
 
+  GeneratedColumn<String> get folio =>
+      $composableBuilder(column: $table.folio, builder: (column) => column);
+
   GeneratedColumn<String> get syncStatus => $composableBuilder(
       column: $table.syncStatus, builder: (column) => column);
 
@@ -5920,6 +5969,7 @@ class $$RespuestasDiagnosticoTableTableManager extends RootTableManager<
                   $db: db, $table: table),
           updateCompanionCallback: ({
             Value<String> idLocal = const Value.absent(),
+            Value<String?> folio = const Value.absent(),
             Value<String> syncStatus = const Value.absent(),
             Value<DateTime> fechaCapturaLocal = const Value.absent(),
             Value<String?> borradorJson = const Value.absent(),
@@ -6020,6 +6070,7 @@ class $$RespuestasDiagnosticoTableTableManager extends RootTableManager<
           }) =>
               RespuestasDiagnosticoCompanion(
             idLocal: idLocal,
+            folio: folio,
             syncStatus: syncStatus,
             fechaCapturaLocal: fechaCapturaLocal,
             borradorJson: borradorJson,
@@ -6120,6 +6171,7 @@ class $$RespuestasDiagnosticoTableTableManager extends RootTableManager<
           ),
           createCompanionCallback: ({
             required String idLocal,
+            Value<String?> folio = const Value.absent(),
             Value<String> syncStatus = const Value.absent(),
             required DateTime fechaCapturaLocal,
             Value<String?> borradorJson = const Value.absent(),
@@ -6220,6 +6272,7 @@ class $$RespuestasDiagnosticoTableTableManager extends RootTableManager<
           }) =>
               RespuestasDiagnosticoCompanion.insert(
             idLocal: idLocal,
+            folio: folio,
             syncStatus: syncStatus,
             fechaCapturaLocal: fechaCapturaLocal,
             borradorJson: borradorJson,

@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:drift/drift.dart';
 import '../models/form_models.dart';
 import 'app_database.dart';
+import 'folio_generator.dart';
 
 class RespuestasRepository {
   final AppDatabase _db;
@@ -29,6 +30,7 @@ class RespuestasRepository {
   /// Método privado para construir un Companion reutilizable entre guardarRespuesta y guardarBorrador.
   RespuestasDiagnosticoCompanion _crearCompanion({
     required String idLocal,
+    required String folio,
     required String syncStatus,
     required FormSchema schema,
     required Map<String, dynamic> respuestas,
@@ -52,6 +54,7 @@ class RespuestasRepository {
 
     return RespuestasDiagnosticoCompanion(
       idLocal: Value(idLocal),
+      folio: Value(folio),
       syncStatus: Value(syncStatus),
       fechaCapturaLocal: Value(fechaCaptura),
       formulario: Value(schema.id), // 'ejecutivo' | 'ampliado'
@@ -210,8 +213,13 @@ class RespuestasRepository {
     String? idLocal,
   }) async {
     final id = idLocal ?? generarIdLocal();
+    final existente = await (_db.select(_db.respuestasDiagnostico)
+          ..where((t) => t.idLocal.equals(id)))
+        .getSingleOrNull();
+    final folio = existente?.folio ?? generarFolio();
     final companion = _crearCompanion(
       idLocal: id,
+      folio: folio,
       syncStatus: 'pendiente',
       schema: schema,
       respuestas: respuestas,
@@ -228,8 +236,13 @@ class RespuestasRepository {
     required Map<String, String> otros,
     int seccionActual = 0,
   }) async {
+    final existente = await (_db.select(_db.respuestasDiagnostico)
+          ..where((t) => t.idLocal.equals(idLocal)))
+        .getSingleOrNull();
+    final folio = existente?.folio ?? generarFolio();
     final companion = _crearCompanion(
       idLocal: idLocal,
+      folio: folio,
       syncStatus: 'borrador',
       schema: schema,
       respuestas: respuestas,

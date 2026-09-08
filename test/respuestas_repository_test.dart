@@ -224,4 +224,27 @@ void main() {
     final deserializado = repository.deserializarBorrador(borrador!);
     expect(deserializado['seccionActual'], 3);
   });
+
+  test('finalizarRespuesta actualiza latitud y longitud correctamente',
+      () async {
+    final idLocal = repository.generarIdLocal();
+    await repository.guardarBorrador(
+      idLocal: idLocal,
+      schema: formularioEjecutivo,
+      respuestas: {'p1_comunidad_vive': 'Chimay'},
+      otros: {},
+    );
+
+    await repository.finalizarRespuesta(
+      idLocal,
+      latitud: 20.4567,
+      longitud: -89.1234,
+    );
+
+    final lista = await repository.listarGuardadas();
+    final guardado = lista.firstWhere((r) => r.idLocal == idLocal);
+    expect(guardado.syncStatus, 'pendiente');
+    expect(guardado.latitud, 20.4567);
+    expect(guardado.longitud, -89.1234);
+  });
 }

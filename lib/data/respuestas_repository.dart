@@ -253,12 +253,18 @@ class RespuestasRepository {
   }
 
   /// Finaliza una respuesta existente cambiando únicamente su syncStatus a 'pendiente'.
-  Future<void> finalizarRespuesta(String idLocal) async {
+  Future<void> finalizarRespuesta(
+    String idLocal, {
+    double? latitud,
+    double? longitud,
+  }) async {
     await (_db.update(_db.respuestasDiagnostico)
           ..where((t) => t.idLocal.equals(idLocal)))
         .write(
-      const RespuestasDiagnosticoCompanion(
-        syncStatus: Value('pendiente'),
+      RespuestasDiagnosticoCompanion(
+        syncStatus: const Value('pendiente'),
+        latitud: Value(latitud),
+        longitud: Value(longitud),
       ),
     );
   }

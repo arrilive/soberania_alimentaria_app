@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../data/catalogos.dart';
 import '../data/respuestas_repository.dart';
 import '../models/form_models.dart';
+import '../services/gps_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/form_field_widgets.dart';
 
@@ -254,115 +255,143 @@ class _DynamicFormScreenState extends State<DynamicFormScreen>
     final totalPreguntas = indicesSecuenciales.length;
     final totalRespondidas = totalPreguntas - preguntasFaltantes.length;
 
+    bool capturandoUbicacion = false;
+
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Revisar antes de guardar'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Respondiste $totalRespondidas de $totalPreguntas preguntas.\n\n'
-                'Tus respuestas se han estado guardando automáticamente en este dispositivo. '
-                'Al confirmar, este diagnóstico quedará marcado como completo.',
-              ),
-              if (preguntasFaltantes.isNotEmpty) ...[
-                const SizedBox(height: 12),
-                Theme(
-                  data: Theme.of(dialogContext)
-                      .copyWith(dividerColor: Colors.transparent),
-                  child: ExpansionTile(
-                    initiallyExpanded: false,
-                    tilePadding: EdgeInsets.zero,
-                    childrenPadding: const EdgeInsets.only(top: 4, bottom: 8),
-                    title: Text(
-                      'Ver ${preguntasFaltantes.length} preguntas opcionales sin responder',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.guinda,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setStateDialog) => AlertDialog(
+          title: const Text('Revisar antes de guardar'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Respondiste $totalRespondidas de $totalPreguntas preguntas.\n\n'
+                  'Tus respuestas se han estado guardando automáticamente en este dispositivo. '
+                  'Al confirmar, este diagnóstico quedará marcado como completo.',
+                ),
+                if (preguntasFaltantes.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Theme(
+                    data: Theme.of(dialogContext)
+                        .copyWith(dividerColor: Colors.transparent),
+                    child: ExpansionTile(
+                      initiallyExpanded: false,
+                      tilePadding: EdgeInsets.zero,
+                      childrenPadding: const EdgeInsets.only(top: 4, bottom: 8),
+                      title: Text(
+                        'Ver ${preguntasFaltantes.length} preguntas opcionales sin responder',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.guinda,
+                        ),
                       ),
-                    ),
-                    children: preguntasFaltantes.map((f) {
-                      final textoBase = f.pregunta.length > 50
-                          ? '${f.pregunta.substring(0, 50)}...'
-                          : f.pregunta;
-                      final infoFilas = (f.filasRespondidas != null &&
-                              f.totalFilas != null)
-                          ? ' (${f.filasRespondidas} de ${f.totalFilas} filas respondidas)'
-                          : '';
-                      final textoFinal = '$textoBase$infoFilas';
+                      children: preguntasFaltantes.map((f) {
+                        final textoBase = f.pregunta.length > 50
+                            ? '${f.pregunta.substring(0, 50)}...'
+                            : f.pregunta;
+                        final infoFilas = (f.filasRespondidas != null &&
+                                f.totalFilas != null)
+                            ? ' (${f.filasRespondidas} de ${f.totalFilas} filas respondidas)'
+                            : '';
+                        final textoFinal = '$textoBase$infoFilas';
 
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 3.0),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '${f.numSecuencial}. ',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 12,
-                              ),
-                            ),
-                            Expanded(
-                              child: Text(
-                                textoFinal,
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 3.0),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${f.numSecuencial}. ',
                                 style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
                                   fontSize: 12,
-                                  color: AppColors.textoSecundario,
                                 ),
                               ),
-                            ),
-                          ],
+                              Expanded(
+                                child: Text(
+                                  textoFinal,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: AppColors.textoSecundario,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: capturandoUbicacion
+                  ? null
+                  : () {
+                      Navigator.of(dialogContext).pop();
+                      if (preguntasFaltantes.isNotEmpty) {
+                        setState(() => _seccionActual =
+                            preguntasFaltantes.first.seccionIndex);
+                      }
+                    },
+              child: const Text('Seguir editando'),
+            ),
+            ElevatedButton(
+              onPressed: capturandoUbicacion
+                  ? null
+                  : () async {
+                      setStateDialog(() => capturandoUbicacion = true);
+                      final navigator = Navigator.of(context);
+                      final messenger = ScaffoldMessenger.of(context);
+                      final posicion = await capturarUbicacion();
+                      await RespuestasRepository.instancia.guardarBorrador(
+                        idLocal: _idLocal,
+                        schema: widget.schema,
+                        respuestas: _respuestas,
+                        otros: _otros,
+                        seccionActual: _seccionActual,
+                      );
+                      await RespuestasRepository.instancia.finalizarRespuesta(
+                        _idLocal,
+                        latitud: posicion?.latitude,
+                        longitud: posicion?.longitude,
+                      );
+                      if (!mounted) return;
+                      navigator.pop(); // cierra el diálogo
+                      navigator.pop(); // regresa a Home
+                      messenger.showSnackBar(
+                        const SnackBar(
+                          content:
+                              Text('Diagnóstico guardado en este dispositivo.'),
+                          backgroundColor: AppColors.exito,
                         ),
                       );
-                    }).toList(),
-                  ),
-                ),
-              ],
-            ],
-          ),
+                    },
+              child: capturandoUbicacion
+                  ? const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: Colors.white),
+                        ),
+                        SizedBox(width: 8),
+                        Text('Obteniendo ubicación...'),
+                      ],
+                    )
+                  : const Text('Guardar diagnóstico'),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(dialogContext).pop();
-              if (preguntasFaltantes.isNotEmpty) {
-                setState(() =>
-                    _seccionActual = preguntasFaltantes.first.seccionIndex);
-              }
-            },
-            child: const Text('Seguir editando'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final navigator = Navigator.of(context);
-              final messenger = ScaffoldMessenger.of(context);
-              await RespuestasRepository.instancia.guardarBorrador(
-                idLocal: _idLocal,
-                schema: widget.schema,
-                respuestas: _respuestas,
-                otros: _otros,
-                seccionActual: _seccionActual,
-              );
-              await RespuestasRepository.instancia.finalizarRespuesta(_idLocal);
-
-              if (!mounted) return;
-              navigator.pop(); // cierra el diálogo
-              navigator.pop(); // regresa a Home
-              messenger.showSnackBar(
-                const SnackBar(
-                  content: Text('Diagnóstico guardado en este dispositivo.'),
-                  backgroundColor: AppColors.exito,
-                ),
-              );
-            },
-            child: const Text('Guardar diagnóstico'),
-          ),
-        ],
       ),
     );
   }

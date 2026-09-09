@@ -346,4 +346,29 @@ class RespuestasRepository {
     final result = await query.getSingle();
     return result.read(countExpr) ?? 0;
   }
+
+  /// Lista los registros pendientes de sincronización, ordenados por fecha
+  /// de captura (más antiguos primero, para enviarlos en el orden en que
+  /// se capturaron en campo).
+  Future<List<RespuestasDiagnosticoData>> listarPendientesSync() {
+    return (_db.select(_db.respuestasDiagnostico)
+          ..where((t) => t.syncStatus.equals('pendiente'))
+          ..orderBy([
+            (t) => OrderingTerm(
+                expression: t.fechaCapturaLocal, mode: OrderingMode.asc)
+          ]))
+        .get();
+  }
+
+  /// Marca un registro como sincronizado exitosamente con el servidor
+  /// central.
+  Future<void> marcarComoEnviado(String idLocal) async {
+    await (_db.update(_db.respuestasDiagnostico)
+          ..where((t) => t.idLocal.equals(idLocal)))
+        .write(
+      const RespuestasDiagnosticoCompanion(
+        syncStatus: Value('enviado'),
+      ),
+    );
+  }
 }

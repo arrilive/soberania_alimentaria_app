@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../data/app_database.dart';
 import '../data/respuestas_repository.dart';
+import '../services/sync_service.dart';
 import '../theme/app_theme.dart';
 
 class DebugRespuestasScreen extends StatefulWidget {
@@ -13,6 +14,7 @@ class DebugRespuestasScreen extends StatefulWidget {
 class _DebugRespuestasScreenState extends State<DebugRespuestasScreen> {
   late Future<List<RespuestasDiagnosticoData>> _futureRespuestas;
   int _pendientes = 0;
+  bool _sincronizando = false;
 
   @override
   void initState() {
@@ -89,6 +91,40 @@ class _DebugRespuestasScreenState extends State<DebugRespuestasScreen> {
                     color: AppColors.guinda,
                     fontWeight: FontWeight.w600,
                   ),
+                ),
+                const SizedBox(height: 10),
+                ElevatedButton.icon(
+                  onPressed: _pendientes == 0 || _sincronizando
+                      ? null
+                      : () async {
+                          setState(() => _sincronizando = true);
+                          final resultado = await sincronizarPendientes();
+                          if (!context.mounted) return;
+                          setState(() => _sincronizando = false);
+                          _cargarDatos();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                resultado.fallidos == 0
+                                    ? '${resultado.enviados} diagnóstico(s) sincronizado(s) correctamente.'
+                                    : '${resultado.enviados} enviado(s), ${resultado.fallidos} sin conexión o con error (se reintentarán después).',
+                              ),
+                              backgroundColor: resultado.fallidos == 0
+                                  ? AppColors.exito
+                                  : AppColors.doradoInstitucional,
+                            ),
+                          );
+                        },
+                  icon: _sincronizando
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.cloud_upload_outlined),
+                  label: Text(_sincronizando
+                      ? 'Sincronizando...'
+                      : 'Sincronizar ahora'),
                 ),
               ],
             ),

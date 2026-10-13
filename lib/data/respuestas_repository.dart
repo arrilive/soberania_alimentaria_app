@@ -385,4 +385,25 @@ class RespuestasRepository {
       ),
     );
   }
+
+  /// Elimina la copia local de un diagnóstico únicamente si su estado es 'enviado'.
+  ///
+  /// Solo borra la copia local; no toca el servidor.
+  /// Retorna el número de filas borradas (1 si se eliminó, 0 si no existía o no estaba en estado 'enviado').
+  Future<int> eliminarEnviadoLocal(String idLocal) {
+    return (_db.delete(_db.respuestasDiagnostico)
+          ..where((t) =>
+              t.idLocal.equals(idLocal) & t.syncStatus.equals('enviado')))
+        .go();
+  }
+
+  /// Elimina todas las copias locales de diagnósticos con estado 'enviado'.
+  ///
+  /// Solo borra la copia local; no toca el servidor.
+  /// Retorna el total de filas borradas.
+  Future<int> eliminarTodosEnviadosLocal() {
+    return (_db.delete(_db.respuestasDiagnostico)
+          ..where((t) => t.syncStatus.equals('enviado')))
+        .go();
+  }
 }

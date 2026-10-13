@@ -3,7 +3,7 @@ import '../data/form_schemas.dart';
 import '../data/respuestas_repository.dart';
 import '../models/form_models.dart';
 import '../theme/app_theme.dart';
-import 'debug_respuestas_screen.dart';
+import 'diagnosticos_guardados_screen.dart';
 import 'dynamic_form_screen.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -144,7 +144,7 @@ class HomeScreen extends StatelessWidget {
               color: AppColors.doradoInstitucional,
               onTap: () => Navigator.of(context).push(
                 MaterialPageRoute(
-                    builder: (_) => const DebugRespuestasScreen()),
+                    builder: (_) => const DiagnosticosGuardadosScreen()),
               ),
             ),
             const SizedBox(height: 24),

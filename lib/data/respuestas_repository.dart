@@ -360,6 +360,20 @@ class RespuestasRepository {
         .get();
   }
 
+  /// Actualiza el folio de un registro existente únicamente si su folio actual
+  /// es nulo o vacío. Retorna el número de filas afectadas.
+  Future<int> actualizarFolio(String idLocal, String folio) {
+    return (_db.update(_db.respuestasDiagnostico)
+          ..where((t) =>
+              t.idLocal.equals(idLocal) &
+              (t.folio.isNull() | t.folio.equals(''))))
+        .write(
+      RespuestasDiagnosticoCompanion(
+        folio: Value(folio),
+      ),
+    );
+  }
+
   /// Marca un registro como sincronizado exitosamente con el servidor
   /// central.
   Future<void> marcarComoEnviado(String idLocal) async {

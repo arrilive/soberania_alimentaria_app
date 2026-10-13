@@ -1,53 +1,119 @@
 import 'dart:convert';
+import 'package:drift/drift.dart' show Value;
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../data/app_database.dart';
+import '../data/folio_generator.dart';
 import '../data/respuestas_repository.dart';
 
 /// URL del endpoint de sincronización en producción.
-const String _endpointUrl =
+const String defaultEndpointUrl =
     'https://siemai.mx/soberania_alimentaria/endpoint_app_movil.php';
 
 /// Llave de API, inyectada en tiempo de compilación vía --dart-define.
 /// NUNCA hardcodear la llave real aquí.
-const String _apiKey = String.fromEnvironment('API_KEY');
+const String defaultApiKey = String.fromEnvironment('API_KEY');
 
 /// Resultado de un intento de sincronización, para reportar a la UI.
 class ResultadoSincronizacion {
   final int enviados;
   final int fallidos;
-  const ResultadoSincronizacion(
-      {required this.enviados, required this.fallidos});
+  final int fallidosAutenticacion;
+  final bool errorAutenticacion;
+
+  const ResultadoSincronizacion({
+    required this.enviados,
+    required this.fallidos,
+    this.fallidosAutenticacion = 0,
+    bool? errorAutenticacion,
+  }) : errorAutenticacion = errorAutenticacion ?? (fallidosAutenticacion > 0);
+}
+
+/// Estado interno del envío individual de un diagnóstico.
+enum ResultadoEnvio {
+  exito,
+  errorAutenticacion,
+  otroError,
 }
 
 /// Sincroniza todos los diagnósticos pendientes contra el servidor
 /// central. Cada registro se procesa de forma independiente: un fallo en
-/// uno no detiene el resto ni lanza excepción hacia el llamador.
-Future<ResultadoSincronizacion> sincronizarPendientes() async {
-  final repo = RespuestasRepository.instancia;
+/// uno no detiene el resto ni lanza excepción hacia el llamador, salvo
+/// que ocurra un error de autenticación (401/403), en cuyo caso se corta el ciclo.
+Future<ResultadoSincronizacion> sincronizarPendientes({
+  http.Client? client,
+  String endpointUrl = defaultEndpointUrl,
+  String apiKey = defaultApiKey,
+  Duration timeout = const Duration(seconds: 20),
+  RespuestasRepository? repository,
+}) async {
+  final repo = repository ?? RespuestasRepository.instancia;
   final pendientes = await repo.listarPendientesSync();
+
+  final httpClient = client ?? http.Client();
+  final bool cerrarCliente = client == null;
 
   int enviados = 0;
   int fallidos = 0;
+  int fallidosAutenticacion = 0;
 
-  for (final registro in pendientes) {
-    try {
-      final exito = await _enviarRegistro(registro);
-      if (exito) {
-        await repo.marcarComoEnviado(registro.idLocal);
-        enviados++;
-      } else {
+  try {
+    for (final registro in pendientes) {
+      try {
+        var registroParaEnviar = registro;
+        if (registro.folio == null || registro.folio!.trim().isEmpty) {
+          final nuevoFolio = generarFolio();
+          await repo.actualizarFolio(registro.idLocal, nuevoFolio);
+          registroParaEnviar = registro.copyWith(folio: Value(nuevoFolio));
+        }
+
+        final resultado = await _enviarRegistro(
+          registroParaEnviar,
+          client: httpClient,
+          endpointUrl: endpointUrl,
+          apiKey: apiKey,
+          timeout: timeout,
+        );
+
+        if (resultado == ResultadoEnvio.exito) {
+          await repo.marcarComoEnviado(registro.idLocal);
+          enviados++;
+        } else if (resultado == ResultadoEnvio.errorAutenticacion) {
+          fallidosAutenticacion++;
+          fallidos++;
+          break;
+        } else {
+          fallidos++;
+        }
+      } catch (e, stackTrace) {
+        debugPrint(
+            'Error al sincronizar registro ${registro.idLocal}: $e\n$stackTrace');
         fallidos++;
       }
-    } catch (_) {
-      fallidos++;
+    }
+  } finally {
+    if (cerrarCliente) {
+      httpClient.close();
     }
   }
 
-  return ResultadoSincronizacion(enviados: enviados, fallidos: fallidos);
+  return ResultadoSincronizacion(
+    enviados: enviados,
+    fallidos: fallidos,
+    fallidosAutenticacion: fallidosAutenticacion,
+  );
 }
 
-Future<bool> _enviarRegistro(RespuestasDiagnosticoData r) async {
-  if (r.folio == null || r.folio!.isEmpty) return false;
+Future<ResultadoEnvio> _enviarRegistro(
+  RespuestasDiagnosticoData r, {
+  http.Client? client,
+  String endpointUrl = defaultEndpointUrl,
+  String apiKey = defaultApiKey,
+  Duration timeout = const Duration(seconds: 20),
+}) async {
+  if (r.folio == null || r.folio!.trim().isEmpty) {
+    return ResultadoEnvio.otroError;
+  }
 
   final cuerpo = jsonEncode({
     'folio': r.folio,
@@ -146,19 +212,36 @@ Future<bool> _enviarRegistro(RespuestasDiagnosticoData r) async {
     'longitud': r.longitud,
   });
 
-  final respuesta = await http
-      .post(
-        Uri.parse(_endpointUrl),
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Api-Key': _apiKey,
-        },
-        body: cuerpo,
-      )
-      .timeout(const Duration(seconds: 20));
+  final httpClient = client ?? http.Client();
+  final bool cerrarCliente = client == null;
 
-  if (respuesta.statusCode != 200) return false;
+  try {
+    final respuesta = await httpClient
+        .post(
+          Uri.parse(endpointUrl),
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Api-Key': apiKey,
+          },
+          body: cuerpo,
+        )
+        .timeout(timeout);
 
-  final decodificado = jsonDecode(respuesta.body) as Map<String, dynamic>;
-  return decodificado['ok'] == true;
+    if (respuesta.statusCode == 401 || respuesta.statusCode == 403) {
+      return ResultadoEnvio.errorAutenticacion;
+    }
+
+    if (respuesta.statusCode != 200) {
+      return ResultadoEnvio.otroError;
+    }
+
+    final decodificado = jsonDecode(respuesta.body) as Map<String, dynamic>;
+    final bool exito =
+        decodificado['ok'] == true || decodificado['duplicado'] == true;
+    return exito ? ResultadoEnvio.exito : ResultadoEnvio.otroError;
+  } finally {
+    if (cerrarCliente) {
+      httpClient.close();
+    }
+  }
 }

@@ -94,7 +94,9 @@ class _DebugRespuestasScreenState extends State<DebugRespuestasScreen> {
                 ),
                 const SizedBox(height: 10),
                 ElevatedButton.icon(
-                  onPressed: _pendientes == 0 || _sincronizando
+                  onPressed: _pendientes == 0 ||
+                          _sincronizando ||
+                          defaultApiKey.isEmpty
                       ? null
                       : () async {
                           setState(() => _sincronizando = true);
@@ -102,18 +104,29 @@ class _DebugRespuestasScreenState extends State<DebugRespuestasScreen> {
                           if (!context.mounted) return;
                           setState(() => _sincronizando = false);
                           _cargarDatos();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                resultado.fallidos == 0
-                                    ? '${resultado.enviados} diagnóstico(s) sincronizado(s) correctamente.'
-                                    : '${resultado.enviados} enviado(s), ${resultado.fallidos} sin conexión o con error (se reintentarán después).',
+                          if (resultado.errorAutenticacion) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'El servidor rechazó la llave de la app (inválida o vencida). Avisa al desarrollador para recompilar con la llave vigente.',
+                                ),
+                                backgroundColor: AppColors.guinda,
                               ),
-                              backgroundColor: resultado.fallidos == 0
-                                  ? AppColors.exito
-                                  : AppColors.doradoInstitucional,
-                            ),
-                          );
+                            );
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  resultado.fallidos == 0
+                                      ? '${resultado.enviados} diagnóstico(s) sincronizado(s) correctamente.'
+                                      : '${resultado.enviados} enviado(s), ${resultado.fallidos} sin conexión o con error (se reintentarán después).',
+                                ),
+                                backgroundColor: resultado.fallidos == 0
+                                    ? AppColors.exito
+                                    : AppColors.doradoInstitucional,
+                              ),
+                            );
+                          }
                         },
                   icon: _sincronizando
                       ? const SizedBox(
@@ -126,6 +139,18 @@ class _DebugRespuestasScreenState extends State<DebugRespuestasScreen> {
                       ? 'Sincronizando...'
                       : 'Sincronizar ahora'),
                 ),
+                if (defaultApiKey.isEmpty) ...[
+                  const SizedBox(height: 8),
+                  const Text(
+                    'La app se compiló sin llave válida. Favor de avisar al desarrollador.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppColors.guinda,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
               ],
             ),
           ),

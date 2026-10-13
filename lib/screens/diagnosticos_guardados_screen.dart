@@ -314,114 +314,105 @@ class _DiagnosticosGuardadosScreenState
                     Padding(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 8),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              child: Row(
-                                children: [
-                                  ChoiceChip(
-                                    label: Text('Todos ($totalCount)'),
-                                    selected:
-                                        _filtroActual == _FiltroEstado.todos,
-                                    selectedColor: AppColors.guinda
-                                        .withValues(alpha: 0.15),
-                                    labelStyle: TextStyle(
-                                      color:
-                                          _filtroActual == _FiltroEstado.todos
-                                              ? AppColors.guinda
-                                              : AppColors.textoPrincipal,
-                                      fontWeight:
-                                          _filtroActual == _FiltroEstado.todos
-                                              ? FontWeight.bold
-                                              : FontWeight.normal,
-                                    ),
-                                    onSelected: (selected) {
-                                      if (selected) {
-                                        setState(() => _filtroActual =
-                                            _FiltroEstado.todos);
-                                      }
-                                    },
-                                  ),
-                                  const SizedBox(width: 8),
-                                  ChoiceChip(
-                                    label:
-                                        Text('Pendientes ($pendientesCount)'),
-                                    selected: _filtroActual ==
-                                        _FiltroEstado.pendientes,
-                                    selectedColor: AppColors.guinda
-                                        .withValues(alpha: 0.15),
-                                    labelStyle: TextStyle(
-                                      color: _filtroActual ==
-                                              _FiltroEstado.pendientes
-                                          ? AppColors.guinda
-                                          : AppColors.textoPrincipal,
-                                      fontWeight: _filtroActual ==
-                                              _FiltroEstado.pendientes
-                                          ? FontWeight.bold
-                                          : FontWeight.normal,
-                                    ),
-                                    onSelected: (selected) {
-                                      if (selected) {
-                                        setState(() => _filtroActual =
-                                            _FiltroEstado.pendientes);
-                                      }
-                                    },
-                                  ),
-                                  const SizedBox(width: 8),
-                                  ChoiceChip(
-                                    label: Text('Enviados ($enviadosCount)'),
-                                    selected:
-                                        _filtroActual == _FiltroEstado.enviados,
-                                    selectedColor: AppColors.guinda
-                                        .withValues(alpha: 0.15),
-                                    labelStyle: TextStyle(
-                                      color: _filtroActual ==
-                                              _FiltroEstado.enviados
-                                          ? AppColors.guinda
-                                          : AppColors.textoPrincipal,
-                                      fontWeight: _filtroActual ==
-                                              _FiltroEstado.enviados
-                                          ? FontWeight.bold
-                                          : FontWeight.normal,
-                                    ),
-                                    onSelected: (selected) {
-                                      if (selected) {
-                                        setState(() => _filtroActual =
-                                            _FiltroEstado.enviados);
-                                      }
-                                    },
-                                  ),
-                                ],
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            ChoiceChip(
+                              label: Text('Todos ($totalCount)'),
+                              selected: _filtroActual == _FiltroEstado.todos,
+                              selectedColor:
+                                  AppColors.guinda.withValues(alpha: 0.15),
+                              labelStyle: TextStyle(
+                                color: _filtroActual == _FiltroEstado.todos
+                                    ? AppColors.guinda
+                                    : AppColors.textoPrincipal,
+                                fontWeight: _filtroActual == _FiltroEstado.todos
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
                               ),
+                              onSelected: (selected) {
+                                if (selected) {
+                                  setState(() =>
+                                      _filtroActual = _FiltroEstado.todos);
+                                }
+                              },
                             ),
-                          ),
-                          if (_filtroActual == _FiltroEstado.enviados &&
-                              enviadosCount > 0) ...[
                             const SizedBox(width: 8),
-                            TextButton.icon(
-                              style: TextButton.styleFrom(
-                                foregroundColor: AppColors.guinda,
+                            ChoiceChip(
+                              label: Text('Pendientes ($pendientesCount)'),
+                              selected:
+                                  _filtroActual == _FiltroEstado.pendientes,
+                              selectedColor:
+                                  AppColors.guinda.withValues(alpha: 0.15),
+                              labelStyle: TextStyle(
+                                color: _filtroActual == _FiltroEstado.pendientes
+                                    ? AppColors.guinda
+                                    : AppColors.textoPrincipal,
+                                fontWeight:
+                                    _filtroActual == _FiltroEstado.pendientes
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
                               ),
-                              onPressed: _sincronizando
-                                  ? null
-                                  : () => _confirmarEliminarTodosEnviados(
-                                        context,
-                                        enviadosCount,
-                                      ),
-                              icon: const Icon(Icons.delete_sweep_outlined,
-                                  size: 18),
-                              label: Text(
-                                'Eliminar enviados ($enviadosCount)',
-                                style: const TextStyle(
-                                    fontSize: 12, fontWeight: FontWeight.bold),
+                              onSelected: (selected) {
+                                if (selected) {
+                                  setState(() =>
+                                      _filtroActual = _FiltroEstado.pendientes);
+                                }
+                              },
+                            ),
+                            const SizedBox(width: 8),
+                            ChoiceChip(
+                              label: Text('Enviados ($enviadosCount)'),
+                              selected: _filtroActual == _FiltroEstado.enviados,
+                              selectedColor:
+                                  AppColors.guinda.withValues(alpha: 0.15),
+                              labelStyle: TextStyle(
+                                color: _filtroActual == _FiltroEstado.enviados
+                                    ? AppColors.guinda
+                                    : AppColors.textoPrincipal,
+                                fontWeight:
+                                    _filtroActual == _FiltroEstado.enviados
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
                               ),
+                              onSelected: (selected) {
+                                if (selected) {
+                                  setState(() =>
+                                      _filtroActual = _FiltroEstado.enviados);
+                                }
+                              },
                             ),
                           ],
-                        ],
+                        ),
                       ),
                     ),
+                    if (_filtroActual == _FiltroEstado.enviados &&
+                        enviadosCount > 0)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+                        child: Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton.icon(
+                            style: TextButton.styleFrom(
+                              foregroundColor: AppColors.guinda,
+                            ),
+                            onPressed: _sincronizando
+                                ? null
+                                : () => _confirmarEliminarTodosEnviados(
+                                      context,
+                                      enviadosCount,
+                                    ),
+                            icon: const Icon(Icons.delete_sweep_outlined,
+                                size: 18),
+                            label: Text(
+                              'Eliminar enviados ($enviadosCount)',
+                              style: const TextStyle(
+                                  fontSize: 12, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ),
+                      ),
                     Expanded(
                       child: listaFiltrada.isEmpty
                           ? Center(

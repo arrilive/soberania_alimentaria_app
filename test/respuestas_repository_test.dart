@@ -247,4 +247,107 @@ void main() {
     expect(guardado.latitud, 20.4567);
     expect(guardado.longitud, -89.1234);
   });
+
+  test('eliminarEnviadoLocal borra un registro enviado y devuelve 1', () async {
+    const idLocal = 'test_enviado_1';
+    await repository.guardarRespuesta(
+      schema: formularioEjecutivo,
+      respuestas: {},
+      otros: {},
+      idLocal: idLocal,
+    );
+    await repository.marcarComoEnviado(idLocal);
+
+    final resultado = await repository.eliminarEnviadoLocal(idLocal);
+    expect(resultado, 1);
+
+    final lista = await repository.listarGuardadas();
+    expect(lista.any((r) => r.idLocal == idLocal), isFalse);
+  });
+
+  test('eliminarEnviadoLocal con un pendiente devuelve 0 y el registro sigue',
+      () async {
+    const idLocal = 'test_pendiente_1';
+    await repository.guardarRespuesta(
+      schema: formularioEjecutivo,
+      respuestas: {},
+      otros: {},
+      idLocal: idLocal,
+    );
+
+    final resultado = await repository.eliminarEnviadoLocal(idLocal);
+    expect(resultado, 0);
+
+    final lista = await repository.listarGuardadas();
+    expect(lista.any((r) => r.idLocal == idLocal), isTrue);
+  });
+
+  test('eliminarEnviadoLocal con un borrador devuelve 0 y el registro sigue',
+      () async {
+    const idLocal = 'test_borrador_1';
+    await repository.guardarBorrador(
+      idLocal: idLocal,
+      schema: formularioEjecutivo,
+      respuestas: {},
+      otros: {},
+    );
+
+    final resultado = await repository.eliminarEnviadoLocal(idLocal);
+    expect(resultado, 0);
+
+    final lista = await repository.listarGuardadas();
+    expect(lista.any((r) => r.idLocal == idLocal), isTrue);
+  });
+
+  test('eliminarEnviadoLocal con un id inexistente devuelve 0', () async {
+    final resultado =
+        await repository.eliminarEnviadoLocal('id_completamente_inexistente');
+    expect(resultado, 0);
+  });
+
+  test(
+      'eliminarTodosEnviadosLocal borra solo los enviados, devuelve el conteo y deja pendientes y borradores',
+      () async {
+    const env1 = 'test_env_1';
+    const env2 = 'test_env_2';
+    await repository.guardarRespuesta(
+      schema: formularioEjecutivo,
+      respuestas: {},
+      otros: {},
+      idLocal: env1,
+    );
+    await repository.marcarComoEnviado(env1);
+
+    await repository.guardarRespuesta(
+      schema: formularioEjecutivo,
+      respuestas: {},
+      otros: {},
+      idLocal: env2,
+    );
+    await repository.marcarComoEnviado(env2);
+
+    const pend1 = 'test_pend_1';
+    await repository.guardarRespuesta(
+      schema: formularioEjecutivo,
+      respuestas: {},
+      otros: {},
+      idLocal: pend1,
+    );
+
+    const borr1 = 'test_borr_1';
+    await repository.guardarBorrador(
+      idLocal: borr1,
+      schema: formularioEjecutivo,
+      respuestas: {},
+      otros: {},
+    );
+
+    final borrados = await repository.eliminarTodosEnviadosLocal();
+    expect(borrados, 2);
+
+    final restantes = await repository.listarGuardadas();
+    expect(restantes.length, 2);
+    expect(restantes.map((r) => r.idLocal), containsAll([pend1, borr1]));
+    expect(restantes.any((r) => r.syncStatus == 'enviado'), isFalse);
+  });
 }

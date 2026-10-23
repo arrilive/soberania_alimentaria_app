@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../data/catalogos.dart';
+import '../data/limpieza_respuestas.dart';
+import '../data/reglas_formulario.dart';
 import '../data/respuestas_repository.dart';
 import '../models/form_models.dart';
 import '../services/gps_service.dart';
@@ -159,12 +161,7 @@ class _DynamicFormScreenState extends State<DynamicFormScreen>
     }
   }
 
-  bool _campoVisible(FormFieldConfig campo) {
-    if (campo.dependeDe == null) return true;
-    final valorDelQueDepende = _respuestas[campo.dependeDe];
-    if (valorDelQueDepende == null) return false;
-    return campo.mostrarSiValores?.contains(valorDelQueDepende) ?? false;
-  }
+  bool _campoVisible(FormFieldConfig campo) => campoVisible(campo, _respuestas);
 
   bool _campoRespondido(FormFieldConfig campo) {
     final valor = _respuestas[campo.id];
@@ -351,11 +348,16 @@ class _DynamicFormScreenState extends State<DynamicFormScreen>
                       final navigator = Navigator.of(context);
                       final messenger = ScaffoldMessenger.of(context);
                       final posicion = await capturarUbicacion();
+                      final limpias = limpiarRespuestas(
+                        widget.schema,
+                        _respuestas,
+                        _otros,
+                      );
                       await RespuestasRepository.instancia.guardarBorrador(
                         idLocal: _idLocal,
                         schema: widget.schema,
-                        respuestas: _respuestas,
-                        otros: _otros,
+                        respuestas: limpias.respuestas,
+                        otros: limpias.otros,
                         seccionActual: _seccionActual,
                       );
                       await RespuestasRepository.instancia.finalizarRespuesta(

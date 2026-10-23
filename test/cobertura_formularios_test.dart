@@ -195,7 +195,7 @@ void main() {
           if (campo.permiteOtro) campo.otroOpcionTexto,
         ];
         final combinacionCompleta = todasOpciones.join(',');
-        final limite = limitesVarchar['p30_donde_registra'] ?? 100;
+        final limite = limitesVarchar['p30_donde_registra'] ?? 110;
 
         expect(
           combinacionCompleta.length <= limite,
@@ -204,8 +204,6 @@ void main() {
               'P30 permite ${combinacionCompleta.length} caracteres ("$combinacionCompleta") lo cual excede el límite de varchar($limite)',
         );
       },
-      skip:
-          'Bug conocido: P30 permite 109 caracteres en varchar(100); se corrige en el PR D',
     );
   });
 
@@ -436,8 +434,6 @@ void main() {
             reason:
                 'Multi-selecciones que exceden límite varchar:\n${fallos.join('\n')}');
       },
-      skip:
-          'Bug conocido: P30 permite 109 caracteres en varchar(100); se corrige en el PR D',
     );
   });
 }

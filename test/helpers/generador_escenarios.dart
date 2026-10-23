@@ -178,7 +178,7 @@ const Map<String, int> limitesVarchar = {
   'p27_confianza': 20,
   'p28_factores_confianza': 100,
   'p29_lleva_registro': 50,
-  'p30_donde_registra': 100,
+  'p30_donde_registra': 110,
   'p30_donde_registra_otro': 255,
   'p31_frecuencia_registro': 50,
   'p32_disposicion_registro': 50,
@@ -309,7 +309,7 @@ Set<String> obtenerOpcionesMultiSelect(
 }
 
 /// Opciones de P30 para escenarios máximos: todas las opciones de P30 excepto
-/// "No registro nada", más "Otros" (mide 92 caracteres, respetando varchar(100)).
+/// "No registro nada", más "Otros" (mide 92 caracteres, dentro de varchar(110)).
 Set<String> obtenerOpcionesMultiSelectP30Maximo(FormSchema schema) {
   final campo = buscarCampoPorId(schema, 'p30_donde_registra');
   return {
